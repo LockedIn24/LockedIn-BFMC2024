@@ -28,6 +28,20 @@
 
 from enum import Enum
 
+####################################### laneDetection #######################################
+
+class SpeedLane(Enum): 
+    Queue = "General"
+    Owner = "threadLaneDetection"
+    msgID = 1
+    msgType = "int"
+    
+class RadiusLane(Enum):
+    Queue = "General"
+    Owner = "threadLaneDetection"
+    msgID = 2
+    msgType = "float"
+
 ####################################### processCamera #######################################
 class mainCamera(Enum):
     Queue = "General"
