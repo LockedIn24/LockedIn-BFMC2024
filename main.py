@@ -26,11 +26,11 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# To start the project: 
+# To start the project:
 #
 #       sudo apt update
 #       sudo apt upgrade
-#       xargs sudo apt install -y < "requirement.txt" 
+#       xargs sudo apt install -y < "requirement.txt"
 #       cd src/dashboard/frontend/
 #       curl -fsSL https://fnm.vercel.app/install | bash
 #       source ~/.bashrc
@@ -41,7 +41,6 @@
 #
 # ===================================== GENERAL IMPORTS ==================================
 import sys
-import subprocess
 
 sys.path.append(".")
 from multiprocessing import Queue, Event
@@ -51,6 +50,7 @@ logging.basicConfig(level=logging.INFO)
 
 # ===================================== PROCESS IMPORTS ==================================
 
+from src.control.automatic_control.processautomatic_control import processautomatic_control as processAutomaticControl
 from src.gateway.processGateway import processGateway
 from src.dashboard.processDashboard import processDashboard
 from src.hardware.camera.processCamera import processCamera
@@ -74,13 +74,14 @@ queueList = {
 logging = logging.getLogger()
 
 Dashboard = True
-Camera = False
+Camera = True
 Semaphores = False
 TrafficCommunication = False
-SerialHandler = False
+SerialHandler = True
+AutomaticControl = True
 
 # ------ New component flags starts here ------#
- 
+
 # ------ New component flags ends here ------#
 
 # ===================================== SETUP PROCESSES ==================================
@@ -120,8 +121,13 @@ if SerialHandler:
     processSerialHandler = processSerialHandler(queueList, logging, debugging = True)
     allProcesses.append(processSerialHandler)
 
+# Initializing automating control
+if AutomaticControl:
+    processAutomatic = processAutomaticControl(queueList, logging, debugging=True)
+    allProcesses.append(processAutomatic)
+
 # ------ New component runs starts here ------#
- 
+
 # ------ New component runs ends here ------#
 
 # ===================================== START PROCESSES ==================================
