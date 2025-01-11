@@ -33,6 +33,8 @@ import picamera2
 import time
 
 from src.utils.messages.allMessages import (
+    RadiusLane,
+    SpeedLane,
     mainCamera,
     serialCamera,
     Recording,
@@ -44,6 +46,7 @@ from src.utils.messages.messageHandlerSender import messageHandlerSender
 from src.utils.messages.messageHandlerSubscriber import messageHandlerSubscriber
 from src.templates.threadwithstop import ThreadWithStop
 
+from src.utils.lane_detection.lane import process
 
 class threadCamera(ThreadWithStop):
     """Thread which will handle camera functionalities.\n
@@ -59,7 +62,7 @@ class threadCamera(ThreadWithStop):
         self.queuesList = queuesList
         self.logger = logger
         self.debugger = debugger
-        self.frame_rate = 5
+        self.frame_rate = 30
         self.recording = False
 
         self.video_writer = ""
@@ -67,6 +70,8 @@ class threadCamera(ThreadWithStop):
         self.recordingSender = messageHandlerSender(self.queuesList, Recording)
         self.mainCameraSender = messageHandlerSender(self.queuesList, mainCamera)
         self.serialCameraSender = messageHandlerSender(self.queuesList, serialCamera)
+        self.radiusSender = messageHandlerSender(self.queuesList, RadiusLane)
+        self.speedSender = messageHandlerSender(self.queuesList, SpeedLane)
 
         self.subscribe()
         self._init_camera()
@@ -85,7 +90,7 @@ class threadCamera(ThreadWithStop):
 
         self.recordingSender.send(self.recording)
         threading.Timer(1, self.Queue_Sending).start()
-        
+
     # =============================== STOP ================================================
     def stop(self):
         if self.recording:
@@ -154,14 +159,15 @@ class threadCamera(ThreadWithStop):
                     self.video_writer.write(mainRequest)
 
                 serialRequest = cv2.cvtColor(serialRequest, cv2.COLOR_YUV2BGR_I420)
-
-                _, mainEncodedImg = cv2.imencode(".jpg", mainRequest)                   
-                _, serialEncodedImg = cv2.imencode(".jpg", serialRequest)
-
-                mainEncodedImageData = base64.b64encode(mainEncodedImg).decode("utf-8")
+                result, average_curve = process(serialRequest)
+                self.radiusSender.send(float(average_curve))
+                # _, mainEncodedImg = cv2.imencode(".jpg", mainRequest)
+                # _, serialEncodedImg = cv2.imencode(".jpg", serialRequest)
+                _, serialEncodedImg = cv2.imencode(".jpg", result)
+                # mainEncodedImageData = base64.b64encode(process(result)).decode("utf-8")
                 serialEncodedImageData = base64.b64encode(serialEncodedImg).decode("utf-8")
 
-                self.mainCameraSender.send(mainEncodedImageData)
+                # self.mainCameraSender.send(mainEncodedImageData)
                 self.serialCameraSender.send(serialEncodedImageData)
 
             send = not send
