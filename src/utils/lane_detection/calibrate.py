@@ -15,7 +15,7 @@ imgPointsArray = []
 
 for i in range(1,21):
     print(str(i) + " ")
-    img = cv2.imread("../camera_cal/calibration" + str(i) + ".jpg")
+    img = cv2.imread("/home/natalija/Desktop/stuff/bosch/Lane-Detection-MSuAI-master/camera_cal/calibration" + str(i) + ".jpg")
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
     ret, corners = cv2.findChessboardCorners(gray, (rows, cols), None)

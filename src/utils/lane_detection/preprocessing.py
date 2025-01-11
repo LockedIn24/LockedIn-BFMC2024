@@ -1,49 +1,6 @@
 import cv2
 import numpy as np
 
-def increase_contrast(image, use_clahe=True):
-    """
-    Increases the contrast of an image.
-    
-    Args:
-        image (numpy.ndarray): Input image (grayscale or color).
-        use_clahe (bool): Whether to use CLAHE for better local contrast enhancement (default: True).
-        
-    Returns:
-        numpy.ndarray: Image with increased contrast.
-    """
-    # If the image is grayscale
-    if len(image.shape) == 2:
-        if use_clahe:
-            # Apply CLAHE for grayscale
-            clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-            enhanced_image = clahe.apply(image)
-        else:
-            # Apply global Histogram Equalization for grayscale
-            enhanced_image = cv2.equalizeHist(image)
-    
-    # If the image is in color (BGR)
-    else:
-        # Convert to YCrCb color space
-        ycrcb = cv2.cvtColor(image, cv2.COLOR_BGR2YCrCb)
-        y, cr, cb = cv2.split(ycrcb)
-        
-        if use_clahe:
-            # Apply CLAHE to the Y (luminance) channel
-            clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-            y = clahe.apply(y)
-        else:
-            # Apply global Histogram Equalization to the Y channel
-            y = cv2.equalizeHist(y)
-        
-        # Merge the channels back
-        ycrcb = cv2.merge((y, cr, cb))
-        # Convert back to BGR color space
-        enhanced_image = cv2.cvtColor(ycrcb, cv2.COLOR_YCrCb2BGR)
-    
-    cv2.imshow('high contrast', enhanced_image)
-    return enhanced_image
-
 def hsv(image):
 
     hsvImage = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
@@ -77,10 +34,20 @@ def warpImage(image):
     height = image.shape[0]
 
     # Source points
-    bottom_left = [round(width * 0.0), round(height * 0.9)]
+    # bottom_left = [round(width * 0.1), round(height * 0.9)]
+    # bottom_right = [round(width * 0.9), round(height * 0.9)]
+    # top_left = [round(width * 0.35), round(height * 0.28)]
+    # top_right = [round(width * 0.65), round(height * 0.28)]
+    
+    bottom_left = [round(0), round(height * 0.9)]
     bottom_right = [round(width), round(height * 0.9)]
-    top_left = [round(width * 0.3), round(height * 0.6)]
-    top_right = [round(width * 0.7), round(height * 0.6)]
+    top_left = [round(width * 0.35), round(height * 0.5)]
+    top_right = [round(width * 0.65), round(height * 0.5)]
+    
+    # bottom_left = [round(width * 0.1), round(height * 0.9)]
+    # bottom_right = [round(width * 0.9), round(height * 0.9)]
+    # top_left = [round(width * 0.35), round(height * 0.85)]
+    # top_right = [round(width * 0.55), round(height * 0.85)]
 
     src = np.float32([bottom_left, bottom_right, top_right, top_left])
 
@@ -93,11 +60,16 @@ def warpImage(image):
     # cv2.waitKey(0)
 
     # Destination points
-    bottom_left = [0, height]
-    bottom_right = [width, height]
-    top_left = [0, height * 0.25]
-    top_right = [width, height * 0.25]
+    # bottom_left = [0, height]
+    # bottom_right = [width, height]
+    # top_left = [0, height * 0.3]
+    # top_right = [width, height * 0.3]
 
+    bottom_left = [round(width * 0.2), height]
+    bottom_right = [round(width * 0.8), height]
+    top_left = [round(width * 0.3), round(height * 0.3)]
+    top_right = [round(width * 0.7), round(height * 0.3)]
+    
     dst = np.float32([bottom_left, bottom_right, top_right, top_left])
 
     M = cv2.getPerspectiveTransform(src, dst)
