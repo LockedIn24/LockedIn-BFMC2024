@@ -57,13 +57,14 @@ class threadCamera(ThreadWithStop):
     """
 
     # ================================ INIT ===============================================
-    def __init__(self, queuesList, logger, debugger):
+    def __init__(self, queuesList, logger, syncCameraAutomatic, debugger):
         super(threadCamera, self).__init__()
         self.queuesList = queuesList
         self.logger = logger
         self.debugger = debugger
         self.frame_rate = 30
         self.recording = False
+        self.syncCameraAutomatic = syncCameraAutomatic
 
         self.video_writer = ""
 
@@ -169,6 +170,7 @@ class threadCamera(ThreadWithStop):
 
                 # self.mainCameraSender.send(mainEncodedImageData)
                 self.serialCameraSender.send(serialEncodedImageData)
+                self.syncCameraAutomatic.set()
 
             send = not send
 

@@ -22,11 +22,13 @@ class threadautomatic_control(ThreadWithStop):
         debugging (bool, optional): A flag for debugging. Defaults to False.
     """
 
-    def __init__(self, queueList, logging, debugging=False):
+    def __init__(self, queueList, logging, syncCameraAutomatic, syncAutomaticSerial, debugging=False):
         self.queuesList = queueList
         self.logging = logging
         self.debugging = debugging
         self.subscribe()
+        self.syncAutomaticSerial = syncAutomaticSerial
+        self.syncCameraAutomatic = syncCameraAutomatic
 
         self.speedSender = messageHandlerSender(self.queuesList, SpeedMotor)
         self.steerSender = messageHandlerSender(self.queuesList, SteerMotor)
@@ -38,16 +40,17 @@ class threadautomatic_control(ThreadWithStop):
     def run(self):
         time.sleep(1)
         self.klSender.send("30")
-        # self.drivingModeSender.send("auto")
-        # self.speedSender.send("25")
+        self.syncAutomaticSerial.set()
         while self._running:
             try:
                 # TODO: Speed receive
+                self.syncCameraAutomatic.wait()
                 radiusRecv = self.radiusSubscriber.receive()
                 if radiusRecv is not None:
                     steerValue = self.calculate_steering_angle(0.14, radiusRecv)
                     self.steerSender.send(str(int(steerValue)))
                     self.speedSender.send("25")
+                    self.syncAutomaticSerial.set()
             except Exception as e:
                 print(e)
 

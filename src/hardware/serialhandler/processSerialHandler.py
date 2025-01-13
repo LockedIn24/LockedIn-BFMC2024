@@ -48,7 +48,7 @@ class processSerialHandler(WorkerProcess):
     """
 
     # ===================================== INIT =========================================
-    def __init__(self, queueList, logging, debugging=False, example=False):
+    def __init__(self, queueList, logging, syncAutomaticSerial, debugging=False, example=False):
         devFile = "/dev/ttyACM0"
         logFile = "historyFile.txt"
 
@@ -63,6 +63,7 @@ class processSerialHandler(WorkerProcess):
         self.logger = logging
         self.debugging = debugging
         self.example = example
+        self.syncAutomaticSerial = syncAutomaticSerial
         super(processSerialHandler, self).__init__(self.queuesList)
 
     # ===================================== RUN ==========================================
@@ -77,7 +78,7 @@ class processSerialHandler(WorkerProcess):
         """Initializes the read and the write thread."""
         readTh = threadRead(self.serialCom, self.historyFile, self.queuesList, self.logger, self.debugging)
         self.threads.append(readTh)
-        writeTh = threadWrite(self.queuesList, self.serialCom, self.historyFile, self.logger, self.debugging, self.example)
+        writeTh = threadWrite(self.queuesList, self.serialCom, self.historyFile, self.syncAutomaticSerial,  self.logger, self.debugging, self.example)
         self.threads.append(writeTh)
 
 

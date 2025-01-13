@@ -13,10 +13,12 @@ class processautomatic_control(WorkerProcess):
         debugging (bool, optional): A flag for debugging. Defaults to False.
     """
 
-    def __init__(self, queueList, logging, debugging=False):
+    def __init__(self, queueList, logging, syncCameraAutomatic, syncAutomaticSerial, debugging=False):
         self.queuesList = queueList
         self.logging = logging
         self.debugging = debugging
+        self.syncAutomaticSerial = syncAutomaticSerial
+        self.syncCameraAutomatic = syncCameraAutomatic
         super(processautomatic_control, self).__init__(self.queuesList)
 
     def run(self):
@@ -25,7 +27,5 @@ class processautomatic_control(WorkerProcess):
 
     def _init_threads(self):
         """Create the automatic_control Publisher thread and add to the list of threads."""
-        automatic_controlTh = threadautomatic_control(
-            self.queuesList, self.logging, self.debugging
-        )
+        automatic_controlTh = threadautomatic_control(self.queuesList, self.logging, self.syncCameraAutomatic, self.syncAutomaticSerial, self.debugging )
         self.threads.append(automatic_controlTh)

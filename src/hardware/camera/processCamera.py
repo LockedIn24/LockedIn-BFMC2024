@@ -45,10 +45,11 @@ class processCamera(WorkerProcess):
     """
 
     # ====================================== INIT ==========================================
-    def __init__(self, queueList, logging, debugging=False):
+    def __init__(self, queueList, logging, syncCameraAutomatic, debugging=False):
         self.queuesList = queueList
         self.logging = logging
         self.debugging = debugging
+        self.syncCameraAutomatic = syncCameraAutomatic
         super(processCamera, self).__init__(self.queuesList)
 
     # ===================================== RUN ==========================================
@@ -59,9 +60,7 @@ class processCamera(WorkerProcess):
     # ===================================== INIT TH ======================================
     def _init_threads(self):
         """Create the Camera Publisher thread and add to the list of threads."""
-        camTh = threadCamera(
-         self.queuesList, self.logging, self.debugging
-        )
+        camTh = threadCamera(self.queuesList, self.logging, self.syncCameraAutomatic, self.debugging )
         self.threads.append(camTh)
 
 

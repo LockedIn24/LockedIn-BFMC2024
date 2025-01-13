@@ -58,7 +58,7 @@ class threadWrite(ThreadWithStop):
     """
 
     # ===================================== INIT =========================================
-    def __init__(self, queues, serialCom, logFile, logger, debugger = False, example=False):
+    def __init__(self, queues, serialCom, logFile, syncAutomaticSerial, logger, debugger = False, example=False):
         super(threadWrite, self).__init__()
         self.queuesList = queues
         self.serialCom = serialCom
@@ -66,6 +66,7 @@ class threadWrite(ThreadWithStop):
         self.exampleFlag = example
         self.logger = logger
         self.debugger = debugger
+        self.syncAutomaticSerial = syncAutomaticSerial
 
         self.running = False
         self.engineEnabled = False
@@ -135,6 +136,7 @@ class threadWrite(ThreadWithStop):
 
         while self._running:
             try:
+                self.syncAutomaticSerial.wait()
                 klRecv = self.klSubscriber.receive()
                 if klRecv is not None:
                     if self.debugger:
@@ -158,6 +160,7 @@ class threadWrite(ThreadWithStop):
                         self.sendToSerial(command)
 
                 if self.running:
+                    self.syncAutomaticSerial.wait()
                     if self.engineEnabled:
                         brakeRecv = self.brakeSubscriber.receive()
                         if brakeRecv is not None:
