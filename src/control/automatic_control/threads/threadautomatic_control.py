@@ -1,5 +1,6 @@
 import math
 import time
+
 from src.templates.threadwithstop import ThreadWithStop
 from src.utils.messages.allMessages import (
     DrivingMode,
@@ -9,8 +10,8 @@ from src.utils.messages.allMessages import (
     SpeedMotor,
     SteerMotor,
 )
-from src.utils.messages.messageHandlerSubscriber import messageHandlerSubscriber
 from src.utils.messages.messageHandlerSender import messageHandlerSender
+from src.utils.messages.messageHandlerSubscriber import messageHandlerSubscriber
 
 
 class threadautomatic_control(ThreadWithStop):
@@ -58,15 +59,36 @@ class threadautomatic_control(ThreadWithStop):
 
     def calculate_steering_angle(self, wheelbase, radius_of_curvature, max_steering_angle=25):
         # Calculate the steering angle in radians
-        steering_angle_radians = math.atan(wheelbase / radius_of_curvature)
+        steering_angle_radians = math.atan(wheelbase / abs(radius_of_curvature))
         # Convert the angle to degrees for easier interpretation
         steering_angle_degrees = math.degrees(steering_angle_radians)
+
+        if radius_of_curvature < 0:
+            steering_angle_degrees = -steering_angle_degrees
+
         # Ensure the steering angle does not exceed the maximum allowed angle
-        if steering_angle_degrees > max_steering_angle:
-            steering_angle_degrees = max_steering_angle
-        elif steering_angle_degrees < -max_steering_angle:
-            steering_angle_degrees = -max_steering_angle
+        steering_angle_degrees = max(-max_steering_angle, min(max_steering_angle, steering_angle_degrees))
+        steering_angle_degrees = round(steering_angle_degrees, 0) * 10
 
         # Map the angle from -25 to 25 degrees to -250 to 250
-        mapped_angle = (steering_angle_degrees / max_steering_angle) * 250
-        return mapped_angle
+        # mapped_angle = (steering_angle_degrees / max_steering_angle) * 250
+        # return mapped_angle
+        return steering_angle_degrees
+    
+    # def calculate_steering_angle(wheelbase, radius_of_curvature, max_steering_angle=25):
+    #     # Calculate the steering angle in radians
+    #     steering_angle_radians = math.atan(wheelbase / abs(radius_of_curvature))
+    #     # Convert the angle to degrees for easier interpretation
+    #     steering_angle_degrees = math.degrees(steering_angle_radians)
+
+    #     if radius_of_curvature < 0:
+    #         steering_angle_degrees = -steering_angle_degrees
+
+    #     # Ensure the steering angle does not exceed the maximum allowed angle
+    #     steering_angle_degrees = max(-max_steering_angle, min(max_steering_angle, steering_angle_degrees))
+    #     steering_angle_degrees = round(steering_angle_degrees, 0) * 10
+
+    #     # Map the angle from -25 to 25 degrees to -250 to 250
+    #     # mapped_angle = (steering_angle_degrees / max_steering_angle) * 250
+    #     # return mapped_angle
+    #     return steering_angle_degrees

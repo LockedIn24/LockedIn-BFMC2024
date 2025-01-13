@@ -1,7 +1,9 @@
 import cv2
 import numpy as np
-import preprocessing as prep
-import polynomial_fit as fit
+
+import src.utils.lane_detection.polynomial_fit as fit
+import src.utils.lane_detection.preprocessing as prep
+
 
 def process(image):
     hsvImage = prep.hsv(image)
@@ -19,8 +21,8 @@ def process(image):
     rightLaneIndicies = res['rightLaneIndicies']
 
     leftCurve, rightCurve = fit.calculateCurve(image, leftLaneIndicies, rightLaneIndicies, nonzeroX, nonzeroY)
-    angle = fit.calculate_steering_angle(0.2, (leftCurve+rightCurve)/2)
-    print('Angle', angle)
+    # angle = fit.calculate_steering_angle(0.2, (leftCurve+rightCurve)/2)
+    # print(angle)
 
     bottomY = image.shape[0] - 1
     bottomXLeft = leftFit[0]*(bottomY**2) + leftFit[1]*bottomY + leftFit[2]
@@ -30,6 +32,8 @@ def process(image):
     metersPerPixelX = 0.35/700
     vehicleOffset *= metersPerPixelX
 
+    effective_radius = (leftCurve + rightCurve) / 2
+
     result = fit.showResult(image, leftFit, rightFit, inverseM, leftCurve, rightCurve, vehicleOffset)
 
-    return result
+    return result, effective_radius

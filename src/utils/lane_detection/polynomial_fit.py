@@ -1,7 +1,22 @@
-import cv2
 import math
-import numpy as np
+
+import cv2
 import matplotlib.pyplot as plt
+import numpy as np
+
+
+def visualizeLane(image, leftLaneIndicies, rightLaneIndicies, nonzeroX, nonzeroY):
+    leftX = nonzeroX[leftLaneIndicies]
+    leftY = nonzeroY[leftLaneIndicies]
+    rightX = nonzeroX[rightLaneIndicies]
+    rightY = nonzeroY[rightLaneIndicies]
+
+    plt.imshow(image, cmap='gray')
+    plt.scatter(leftX, leftY, color='red', label='Left Lane', s=10)
+    plt.scatter(rightX, rightY, color='blue', label='Right Lane', s=10)
+    plt.legend()
+    plt.show()
+
 
 def visualizeLane(image, leftLaneIndicies, rightLaneIndicies, nonzeroX, nonzeroY):
     leftX = nonzeroX[leftLaneIndicies]
@@ -121,8 +136,8 @@ def calculateCurve(image, leftLaneIndicies, rightLaneIndicies, nonzeroX, nonzero
         leftCurveRadius = math.inf
         rightCurveRadius = math.inf
 
-    print("Left radious of curvature", leftCurveRadius)
-    print("Right radious of curvature", rightCurveRadius)
+    # print("Left radious of curvature", leftCurveRadius)
+    # print("Right radious of curvature", rightCurveRadius)
 
     return leftCurveRadius, rightCurveRadius
 
@@ -163,3 +178,21 @@ def calculate_steering_angle(wheelbase, radius_of_curvature, max_steering_angle=
     steering_angle_degrees = round(steering_angle_degrees, 0) * 10
     
     return steering_angle_degrees
+
+# def calculate_steering_angle(self, wheelbase, radius_of_curvature, max_steering_angle=25):
+#     # Calculate the steering angle in radians
+#     steering_angle_radians = math.atan(wheelbase / abs(radius_of_curvature))
+#     # Convert the angle to degrees for easier interpretation
+#     steering_angle_degrees = math.degrees(steering_angle_radians)
+
+#     if radius_of_curvature < 0:
+#         steering_angle_degrees = -steering_angle_degrees
+
+#     # Ensure the steering angle does not exceed the maximum allowed angle
+#     steering_angle_degrees = max(-max_steering_angle, min(max_steering_angle, steering_angle_degrees))
+#     steering_angle_degrees = round(steering_angle_degrees, 0) * 10
+
+#     # Map the angle from -25 to 25 degrees to -250 to 250
+#     # mapped_angle = (steering_angle_degrees / max_steering_angle) * 250
+#     # return mapped_angle
+#     return steering_angle_degrees
