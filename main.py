@@ -95,6 +95,9 @@ path = './src/dashboard/frontend/src/app/webSocket/web-socket.service.ts'
 IpChanger = IPManager(path)
 IpChanger.replace_ip_in_file()
 
+syncAutomaticSerial = Event()
+syncCameraAutomatic = Event()
+
 
 # Initializing dashboard
 if Dashboard:
@@ -103,7 +106,7 @@ if Dashboard:
 
 # Initializing camera
 if Camera:
-    processCamera = processCamera(queueList, logging , debugging = False)
+    processCamera = processCamera(queueList, logging , syncCameraAutomatic, debugging = False)
     allProcesses.append(processCamera)
 
 # Initializing semaphores
@@ -118,12 +121,12 @@ if TrafficCommunication:
 
 # Initializing serial connection NUCLEO - > PI
 if SerialHandler:
-    processSerialHandler = processSerialHandler(queueList, logging, debugging = True)
+    processSerialHandler = processSerialHandler(queueList, logging, syncCameraAutomatic, syncAutomaticSerial, debugging = True)
     allProcesses.append(processSerialHandler)
 
 # Initializing automating control
 if AutomaticControl:
-    processAutomatic = processAutomaticControl(queueList, logging, debugging=True)
+    processAutomatic = processAutomaticControl(queueList, logging, syncAutomaticSerial, debugging=True)
     allProcesses.append(processAutomatic)
 
 # ------ New component runs starts here ------#
