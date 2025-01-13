@@ -121,12 +121,12 @@ if TrafficCommunication:
 
 # Initializing serial connection NUCLEO - > PI
 if SerialHandler:
-    processSerialHandler = processSerialHandler(queueList, logging, syncCameraAutomatic, syncAutomaticSerial, debugging = True)
+    processSerialHandler = processSerialHandler(queueList, logging, syncAutomaticSerial, debugging = True)
     allProcesses.append(processSerialHandler)
 
 # Initializing automating control
 if AutomaticControl:
-    processAutomatic = processAutomaticControl(queueList, logging, syncAutomaticSerial, debugging=True)
+    processAutomatic = processAutomaticControl(queueList, logging, syncCameraAutomatic, syncAutomaticSerial, debugging=True)
     allProcesses.append(processAutomatic)
 
 # ------ New component runs starts here ------#

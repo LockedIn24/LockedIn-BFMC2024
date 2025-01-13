@@ -1,34 +1,34 @@
 import math
 
 import cv2
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import numpy as np
 
 
-def visualizeLane(image, leftLaneIndicies, rightLaneIndicies, nonzeroX, nonzeroY):
-    leftX = nonzeroX[leftLaneIndicies]
-    leftY = nonzeroY[leftLaneIndicies]
-    rightX = nonzeroX[rightLaneIndicies]
-    rightY = nonzeroY[rightLaneIndicies]
+#def visualizeLane(image, leftLaneIndicies, rightLaneIndicies, nonzeroX, nonzeroY):
+    #leftX = nonzeroX[leftLaneIndicies]
+    #leftY = nonzeroY[leftLaneIndicies]
+    #rightX = nonzeroX[rightLaneIndicies]
+    #rightY = nonzeroY[rightLaneIndicies]
 
-    plt.imshow(image, cmap='gray')
-    plt.scatter(leftX, leftY, color='red', label='Left Lane', s=10)
-    plt.scatter(rightX, rightY, color='blue', label='Right Lane', s=10)
-    plt.legend()
-    plt.show()
+    #plt.imshow(image, cmap='gray')
+    #plt.scatter(leftX, leftY, color='red', label='Left Lane', s=10)
+    #plt.scatter(rightX, rightY, color='blue', label='Right Lane', s=10)
+    #plt.legend()
+    #plt.show()
 
 
-def visualizeLane(image, leftLaneIndicies, rightLaneIndicies, nonzeroX, nonzeroY):
-    leftX = nonzeroX[leftLaneIndicies]
-    leftY = nonzeroY[leftLaneIndicies]
-    rightX = nonzeroX[rightLaneIndicies]
-    rightY = nonzeroY[rightLaneIndicies]
+#def visualizeLane(image, leftLaneIndicies, rightLaneIndicies, nonzeroX, nonzeroY):
+ #   leftX = nonzeroX[leftLaneIndicies]
+  #  leftY = nonzeroY[leftLaneIndicies]
+  #  rightX = nonzeroX[rightLaneIndicies]
+   # rightY = nonzeroY[rightLaneIndicies]
 
-    plt.imshow(image, cmap='gray')
-    plt.scatter(leftX, leftY, color='red', label='Left Lane', s=10)
-    plt.scatter(rightX, rightY, color='blue', label='Right Lane', s=10)
-    plt.legend()
-    plt.show()
+    #plt.imshow(image, cmap='gray')
+    #plt.scatter(leftX, leftY, color='red', label='Left Lane', s=10)
+    #plt.scatter(rightX, rightY, color='blue', label='Right Lane', s=10)
+    #plt.legend()
+    #plt.show()
 
 def lineFit(image):
     height = image.shape[0]
@@ -136,8 +136,8 @@ def calculateCurve(image, leftLaneIndicies, rightLaneIndicies, nonzeroX, nonzero
         leftCurveRadius = math.inf
         rightCurveRadius = math.inf
 
-    # print("Left radious of curvature", leftCurveRadius)
-    # print("Right radious of curvature", rightCurveRadius)
+    print("Left radious of curvature", leftCurveRadius)
+    print("Right radious of curvature", rightCurveRadius)
 
     return leftCurveRadius, rightCurveRadius
 
@@ -167,16 +167,15 @@ def showResult(undistortedFrame, leftFit, rightFit, inverseM, leftCurve, rightCu
 
     return result
 
-def calculate_steering_angle(wheelbase, radius_of_curvature, max_steering_angle=25):
+def calculate_steering_angle(wheelbase, radius_of_curvature, inverse, max_steering_angle=25):
     if abs(radius_of_curvature) < 1e-6:
         raise ValueError("Radius of curvature is too small or zero, which is not realistic.")
     steering_angle_radians = math.atan(wheelbase / abs(radius_of_curvature))
     steering_angle_degrees = math.degrees(steering_angle_radians)
-    if radius_of_curvature < 0:
-        steering_angle_degrees = -steering_angle_degrees
     steering_angle_degrees = max(-max_steering_angle, min(max_steering_angle, steering_angle_degrees))
     steering_angle_degrees = round(steering_angle_degrees, 0) * 10
-    
+    if inverse:
+        return -steering_angle_degrees
     return steering_angle_degrees
 
 # def calculate_steering_angle(self, wheelbase, radius_of_curvature, max_steering_angle=25):

@@ -21,8 +21,10 @@ def process(image):
     rightLaneIndicies = res['rightLaneIndicies']
 
     leftCurve, rightCurve = fit.calculateCurve(image, leftLaneIndicies, rightLaneIndicies, nonzeroX, nonzeroY)
-    # angle = fit.calculate_steering_angle(0.2, (leftCurve+rightCurve)/2)
-    # print(angle)
+    if leftCurve > rightCurve:
+        angle = fit.calculate_steering_angle(0.2, (leftCurve+rightCurve)/2, False)
+    else:
+        angle = fit.calculate_steering_angle(0.2, (leftCurve + rightCurve) / 2, True)
 
     bottomY = image.shape[0] - 1
     bottomXLeft = leftFit[0]*(bottomY**2) + leftFit[1]*bottomY + leftFit[2]
@@ -36,4 +38,4 @@ def process(image):
 
     result = fit.showResult(image, leftFit, rightFit, inverseM, leftCurve, rightCurve, vehicleOffset)
 
-    return result, effective_radius
+    return result, angle
