@@ -39,15 +39,17 @@ class threadautomatic_control(ThreadWithStop):
         time.sleep(1)
         self.klSender.send("30")
         # self.drivingModeSender.send("auto")
-        # self.speedSender.send("25")
+        time.sleep(0.5)
+        self.speedSender.send("25")
         while self._running:
             try:
+                time.sleep(0.5)
                 # TODO: Speed receive
                 radiusRecv = self.radiusSubscriber.receive()
                 if radiusRecv is not None:
-                    steerValue = self.calculate_steering_angle(0.14, radiusRecv)
+                    #steerValue = self.calculate_steering_angle(0.14, radiusRecv)
                     self.steerSender.send(str(int(steerValue)))
-                    self.speedSender.send("25")
+                    #self.speedSender.send("25")
             except Exception as e:
                 print(e)
 
