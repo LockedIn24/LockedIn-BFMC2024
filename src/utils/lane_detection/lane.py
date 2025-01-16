@@ -10,7 +10,7 @@ def process(image):
     #contrastImg = prep.increase_contrast(hsvImage)
     cannyFrame = prep.canny(hsvImage, 50, 150)
     warpedFrame, inverseM = prep.warpImage(cannyFrame)
-
+    shaftPixels = 300
     res = fit.lineFit(warpedFrame)
 
     leftFit = res['leftFit']
@@ -22,20 +22,8 @@ def process(image):
 
     leftCurve, rightCurve = fit.calculateCurve(image, leftLaneIndicies, rightLaneIndicies, nonzeroX, nonzeroY)
     if leftCurve > rightCurve:
-        angle = fit.calculate_steering_angle(0.2, (leftCurve+rightCurve)/2, False)
+        angle = fit.calculate_steering_angle(shaftPixels, (leftCurve+rightCurve)/2, False)
     else:
-        angle = fit.calculate_steering_angle(0.2, (leftCurve + rightCurve) / 2, True)
+        angle = fit.calculate_steering_angle(shaftPixels, (leftCurve + rightCurve) / 2, True)
 
-    bottomY = image.shape[0] - 1
-    bottomXLeft = leftFit[0]*(bottomY**2) + leftFit[1]*bottomY + leftFit[2]
-    bottomXRight = rightFit[0]*(bottomY**2) + rightFit[1]*bottomY + rightFit[2]
-    vehicleOffset = image.shape[1]/2 - (bottomXLeft + bottomXRight)/2
-
-    metersPerPixelX = 0.35/700
-    vehicleOffset *= metersPerPixelX
-
-    effective_radius = (leftCurve + rightCurve) / 2
-
-    result = fit.showResult(image, leftFit, rightFit, inverseM, leftCurve, rightCurve, vehicleOffset)
-
-    return result, angle
+    return angle

@@ -136,7 +136,7 @@ class threadWrite(ThreadWithStop):
 
         while self._running:
             try:
-                self.syncAutomaticSerial.wait()
+                #self.syncAutomaticSerial.wait()
                 klRecv = self.klSubscriber.receive()
                 if klRecv is not None:
                     if self.debugger:
@@ -160,7 +160,7 @@ class threadWrite(ThreadWithStop):
                         self.sendToSerial(command)
 
                 if self.running:
-                    self.syncAutomaticSerial.wait()
+                    #self.syncAutomaticSerial.wait()
                     if self.engineEnabled:
                         brakeRecv = self.brakeSubscriber.receive()
                         if brakeRecv is not None:

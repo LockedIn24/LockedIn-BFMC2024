@@ -65,7 +65,9 @@ class threadCamera(ThreadWithStop):
         self.frame_rate = 30
         self.recording = False
         self.syncCameraAutomatic = syncCameraAutomatic
-
+       
+        self.counter = 0
+        self.bigCounter = 1
         self.video_writer = ""
 
         self.recordingSender = messageHandlerSender(self.queuesList, Recording)
@@ -160,14 +162,18 @@ class threadCamera(ThreadWithStop):
                     self.video_writer.write(mainRequest)
 
                 serialRequest = cv2.cvtColor(serialRequest, cv2.COLOR_YUV2BGR_I420)
-                result, angle = process(serialRequest)
+                angle = process(serialRequest)
                 self.radiusSender.send(float(angle))
                 # _, mainEncodedImg = cv2.imencode(".jpg", mainRequest)
                 # _, serialEncodedImg = cv2.imencode(".jpg", serialRequest)
-                _, serialEncodedImg = cv2.imencode(".jpg", result)
-                # mainEncodedImageData = base64.b64encode(process(result)).decode("utf-8")
+                _, serialEncodedImg = cv2.imencode(".jpg", serialRequest)
                 serialEncodedImageData = base64.b64encode(serialEncodedImg).decode("utf-8")
-
+                
+                if self.counter == 10: 
+                    self.counter = 0
+                    cv2.imwrite(f"/home/oncst/slikePoslao/slike{self.bigCounter}.jpg", serialRequest)
+                    self.bigCounter += 1
+                self.counter += 1
                 # self.mainCameraSender.send(mainEncodedImageData)
                 self.serialCameraSender.send(serialEncodedImageData)
                 self.syncCameraAutomatic.set()
