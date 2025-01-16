@@ -1,5 +1,5 @@
-import cv2
 import numpy as np
+import cv2
 
 # Define the chess board rows and columns
 rows = 5
