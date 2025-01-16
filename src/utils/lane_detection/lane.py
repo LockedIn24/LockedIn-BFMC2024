@@ -29,4 +29,3 @@ def process(image):
     else:
         angle = fit.calculate_steering_angle(osovina, averageCurve, True)
     return angle
-    #print('Angle', angle)

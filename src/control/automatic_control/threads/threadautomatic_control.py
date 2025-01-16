@@ -50,6 +50,7 @@ class threadautomatic_control(ThreadWithStop):
                 # TODO: Speed receive
                 self.syncCameraAutomatic.wait()
                 radiusRecv = self.radiusSubscriber.receive()
+                print(radiusRecv)
                 if radiusRecv is not None:
                     #steerValue = self.calculate_steering_angle(0.14, radiusRecv)
                     self.steerSender.send(str(int(radiusRecv)))
