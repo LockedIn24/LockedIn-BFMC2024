@@ -1,19 +1,19 @@
 import cv2
 import numpy as np
-import preprocessing as prep
-import polynomial_fit as fit
+import src.utils.lane_detection.preprocessing as prep
+import src.utils.lane_detection.polynomial_fit as fit
 
 def process(image):
     hsvImage = prep.hsv(image)
     cannyFrame = prep.canny(hsvImage, 50, 150)
-    cv2.imshow('canny', cannyFrame)
+    #cv2.imshow('canny', cannyFrame)
     warpedFrame, inverseM = prep.warpImage(cannyFrame)
     
     osovina = 300 # 300 piksela, inace 0.2m
 
     res = fit.lineFit(warpedFrame)
-    cv2.imshow('Sliding Windows', res['outputImage'])
-    cv2.waitKey(0)
+    #cv2.imshow('Sliding Windows', res['outputImage'])
+    #cv2.waitKey(0)
 
     leftFit = res['leftFit']
     rightFit = res['rightFit']
@@ -28,4 +28,5 @@ def process(image):
         angle = fit.calculate_steering_angle(osovina, averageCurve, False)
     else:
         angle = fit.calculate_steering_angle(osovina, averageCurve, True)
-    print('Angle', angle)
+    return angle
+    #print('Angle', angle)
