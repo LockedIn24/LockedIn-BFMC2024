@@ -78,7 +78,7 @@ Camera = True
 Semaphores = False
 TrafficCommunication = False
 SerialHandler = True
-AutomaticControl = False
+AutomaticControl = True
 
 # ------ New component flags starts here ------#
 
