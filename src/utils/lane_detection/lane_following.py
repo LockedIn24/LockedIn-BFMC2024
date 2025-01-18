@@ -76,6 +76,8 @@ def lane_following(image):
     left_lane = average_slope_intercept(left_lines)
     right_lane = average_slope_intercept(right_lines)
     
+    output_image = np.copy(image)
+
     # Compute lane center
     lane_center_x = width // 2
     left_x, right_x = None, None
@@ -104,4 +106,17 @@ def lane_following(image):
 
     # steering_angle = pid.compute(error, dt)
 
-    return steering_angle
+    # Step 8: Visualization
+    
+    if left_lane is not None:
+        cv2.line(output_image, (int(np.polyval(left_lane, height)), height), (int(np.polyval(left_lane, height // 2)), height // 2), (255, 0, 0), 5)
+    if right_lane is not None:
+        cv2.line(output_image, (int(np.polyval(right_lane, height)), height), (int(np.polyval(right_lane, height // 2)), height // 2), (0, 0, 255), 5)
+    if left_x is not None and right_x is not None:
+        # Draw lane center
+        cv2.line(output_image, (int(left_x), height), (int(right_x), height), (0, 255, 255), 2)  # Yellow line for lane width
+        cv2.circle(output_image, (lane_center_x, height), 5, (0, 255, 0), -1)  # Green circle for lane center
+    cv2.line(output_image, (image_center_x, height), (lane_center_x, height), (0, 255, 0), 2)
+    cv2.putText(output_image, f"Steering Angle: {steering_angle:.2f}", (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+
+    return steering_angle, output_image

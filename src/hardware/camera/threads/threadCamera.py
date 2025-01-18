@@ -162,10 +162,10 @@ class threadCamera(ThreadWithStop):
                     self.video_writer.write(mainRequest)
 
                 serialRequest = cv2.cvtColor(serialRequest, cv2.COLOR_YUV2BGR_I420)
-                angle = lane_following(serialRequest)
+                angle, output_image = lane_following(serialRequest)
                 self.radiusSender.send(float(angle * 10))
                 # _, mainEncodedImg = cv2.imencode(".jpg", mainRequest)
-                _, serialEncodedImg = cv2.imencode(".jpg", serialRequest)
+                _, serialEncodedImg = cv2.imencode(".jpg", output_image)
                 serialEncodedImageData = base64.b64encode(serialEncodedImg).decode("utf-8")
                 
                 # self.mainCameraSender.send(mainEncodedImageData)
