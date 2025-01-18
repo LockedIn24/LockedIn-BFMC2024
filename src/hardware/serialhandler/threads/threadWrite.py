@@ -160,7 +160,6 @@ class threadWrite(ThreadWithStop):
                         self.sendToSerial(command)
 
                 if self.running:
-                    self.syncAutomaticSerial.wait()
                     if self.engineEnabled:
                         brakeRecv = self.brakeSubscriber.receive()
                         if brakeRecv is not None:
