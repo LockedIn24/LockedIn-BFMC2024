@@ -74,12 +74,15 @@ def lane_following(image):
         return poly
 
     left_lane = average_slope_intercept(left_lines)
-    right_lane = average_slope_intercept(right_lines)
-    
-    output_image = np.copy(image)
+    right_lane = average_slope_intercept(right_lines) 
 
     # Compute lane center
     lane_center_x = width // 2
+    if left_lane is not None:
+        cv2.line(image, (int(np.polyval(left_lane, height)), height), (int(np.polyval(left_lane, height // 2)), height // 2), (255, 0, 0), 5)
+    if right_lane is not None:
+        cv2.line(image, (int(np.polyval(right_lane, height)), height), (int(np.polyval(right_lane, height // 2)), height // 2), (0, 0, 255), 5)
+    
     left_x, right_x = None, None
     if left_lane is not None and right_lane is not None:
         y_bottom = height // 2  # Bottom of the image
@@ -87,11 +90,14 @@ def lane_following(image):
         right_x = np.polyval(right_lane, y_bottom)
         lane_center_x = int((left_x + right_x) / 2)
     elif left_lane is not None:
-        return 22.0
+        cv2.putText(image, f"Steering Angle: 22.0", (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        return 22.0, image
     elif right_lane is not None:
-        return -15.0
+        cv2.putText(image, f"Steering Angle: -15.0", (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        return -14.0, image
     else:
-        return 0
+        cv2.putText(image, f"Steering Angle: 0.0", (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        return 0, image
 
     # Step 6: Calculate error (distance from the center of the image to the lane center)
     image_center_x = width // 2
@@ -108,15 +114,11 @@ def lane_following(image):
 
     # Step 8: Visualization
     
-    if left_lane is not None:
-        cv2.line(output_image, (int(np.polyval(left_lane, height)), height), (int(np.polyval(left_lane, height // 2)), height // 2), (255, 0, 0), 5)
-    if right_lane is not None:
-        cv2.line(output_image, (int(np.polyval(right_lane, height)), height), (int(np.polyval(right_lane, height // 2)), height // 2), (0, 0, 255), 5)
     if left_x is not None and right_x is not None:
         # Draw lane center
-        cv2.line(output_image, (int(left_x), height), (int(right_x), height), (0, 255, 255), 2)  # Yellow line for lane width
-        cv2.circle(output_image, (lane_center_x, height), 5, (0, 255, 0), -1)  # Green circle for lane center
-    cv2.line(output_image, (image_center_x, height), (lane_center_x, height), (0, 255, 0), 2)
-    cv2.putText(output_image, f"Steering Angle: {steering_angle:.2f}", (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        cv2.line(image, (int(left_x), height), (int(right_x), height), (0, 255, 255), 2)  # Yellow line for lane width
+        cv2.circle(image, (lane_center_x, height), 5, (0, 255, 0), -1)  # Green circle for lane center
+    cv2.line(image, (image_center_x, height), (lane_center_x, height), (0, 255, 0), 2)
+    cv2.putText(image, f"Steering Angle: {steering_angle:.2f}", (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
-    return steering_angle, output_image
+    return steering_angle, image
