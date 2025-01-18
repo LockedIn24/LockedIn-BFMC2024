@@ -46,7 +46,7 @@ from src.utils.messages.messageHandlerSender import messageHandlerSender
 from src.utils.messages.messageHandlerSubscriber import messageHandlerSubscriber
 from src.templates.threadwithstop import ThreadWithStop
 
-from src.utils.lane_detection.newAlgorithm import lane_following
+from src.utils.lane_detection.lane_following import lane_following
 
 class threadCamera(ThreadWithStop):
     """Thread which will handle camera functionalities.\n
