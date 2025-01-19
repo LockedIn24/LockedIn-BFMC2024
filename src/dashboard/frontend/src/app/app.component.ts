@@ -33,12 +33,13 @@ import { Subscription } from 'rxjs';
 import { WebSocketService } from './webSocket/web-socket.service';
 import { TableComponent } from './table/table.component';
 import { CommonModule } from '@angular/common'
+import { RouterOutlet } from '@angular/router';
 import * as CryptoJS from 'crypto-js'; 
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [TableComponent, ClusterComponent, FormsModule, CommonModule],
+  imports: [TableComponent, ClusterComponent, FormsModule, CommonModule, RouterOutlet],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })
@@ -55,7 +56,7 @@ export class AppComponent {
   private intervalId: any;
 
   enteredPassword = ''; // User input password
-  isAuthenticated = false; // Controls whether the content is displayed or not
+  isAuthenticated = true; // Controls whether the content is displayed or not
 
   private sessionAccessSubscription: Subscription | undefined;
 

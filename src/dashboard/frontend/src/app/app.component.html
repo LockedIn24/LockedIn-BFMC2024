@@ -37,6 +37,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. -->
 
 <!-- The actual content that will be shown only after correct password -->
 <div class="main-container" *ngIf="isAuthenticated">
+  <!-- <nav>
+    <a routerLink="/">Home</a>
+    <a routerLink="/camera">Camera</a>
+  </nav> -->
+  <router-outlet></router-outlet>
   <div class="cluster-container">
     <app-cluster class="cluster"
       [cursorRotation]="cursorRotationSliderValue"
