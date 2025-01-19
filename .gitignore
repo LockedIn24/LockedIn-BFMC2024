@@ -227,3 +227,4 @@ pyrightconfig.json
 
 historyFile.txt
 .vscode/
+*.pt
