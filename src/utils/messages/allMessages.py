@@ -28,6 +28,14 @@
 
 from enum import Enum
 
+####################################### SignDetection #######################################
+
+class CurrentSign(Enum):
+    Queue = "General"
+    Owner = "threadSign"
+    msgID = 1
+    msgType = "str"
+
 ####################################### laneDetection #######################################
 
 class SpeedLane(Enum): 

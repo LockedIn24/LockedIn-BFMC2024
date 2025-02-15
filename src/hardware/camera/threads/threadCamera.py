@@ -32,6 +32,8 @@ import base64
 import picamera2
 import time
 
+
+from ultralytics import YOLO
 from src.utils.messages.allMessages import (
     RadiusLane,
     SpeedLane,
@@ -41,6 +43,7 @@ from src.utils.messages.allMessages import (
     Record,
     Brightness,
     Contrast,
+    CurrentSign
 )
 from src.utils.messages.messageHandlerSender import messageHandlerSender
 from src.utils.messages.messageHandlerSubscriber import messageHandlerSubscriber
@@ -69,12 +72,14 @@ class threadCamera(ThreadWithStop):
         self.counter = 0
         self.bigCounter = 1
         self.video_writer = ""
+        self.model = YOLO("best.pt")
 
         self.recordingSender = messageHandlerSender(self.queuesList, Recording)
         self.mainCameraSender = messageHandlerSender(self.queuesList, mainCamera)
         self.serialCameraSender = messageHandlerSender(self.queuesList, serialCamera)
         self.radiusSender = messageHandlerSender(self.queuesList, RadiusLane)
         self.speedSender = messageHandlerSender(self.queuesList, SpeedLane)
+        self.signSender  = messageHandlerSender(self.queuesList, CurrentSign)
 
         self.subscribe()
         self._init_camera()
@@ -160,10 +165,28 @@ class threadCamera(ThreadWithStop):
 
                 if self.recording == True:
                     self.video_writer.write(mainRequest)
+                
+                if self.counter == 10:
+                    results = self.model.predict(serialRequest)
+                    max_size = -1
+                    className = ""
+                    for box in results.xyxy[0]:  # Each detection
+                        x_min, y_min, x_max, y_max, conf, cls = box.tolist()
+                        bbox_width = x_max - x_min
+                        bbox_height = y_max - y_min
+                        object_name = results.names[int(cls)]
+                        if bbox_width < max_size:
+                            className = cls
+                            max_size = bbox_width
+                    self.counter = 0        
+                    self.signSender.send(className)
 
+                         
+                self.counter += 1
                 serialRequest = cv2.cvtColor(serialRequest, cv2.COLOR_YUV2BGR_I420)
                 angle, output_image = lane_following(serialRequest)
                 self.radiusSender.send(float(angle * 10))
+                
                 # _, mainEncodedImg = cv2.imencode(".jpg", mainRequest)
                 _, serialEncodedImg = cv2.imencode(".jpg", output_image)
                 serialEncodedImageData = base64.b64encode(serialEncodedImg).decode("utf-8")

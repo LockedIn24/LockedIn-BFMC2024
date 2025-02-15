@@ -103,14 +103,12 @@ def lane_following(image):
     image_center_x = width // 2
     error = lane_center_x - image_center_x    
 
-    # Step 7: Use PID regulator to calculate the steering angle
-    steering_angle = error / 80 * 25
     
-    # half_height = height // 2
-    #steering_angle = math.atan(error / half_height)
-    #steering_angle = max(-25, min(steering_angle, 25))
-
-    # steering_angle = pid.compute(error, dt)
+    
+    distance = height // 2
+    wheelbaseLength = 260
+    steering_angle = math.atan(2*wheelbaseLength*error/distance**2)
+    steering_angle = max(-25, min(steering_angle, 25))
 
     # Step 8: Visualization
     
