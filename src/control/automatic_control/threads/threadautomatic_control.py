@@ -9,7 +9,8 @@ from src.utils.messages.allMessages import (
     SpeedLane,
     SpeedMotor,
     SteerMotor,
-    CurrentSign
+    CurrentSign,
+    SignSize
 )
 from src.utils.messages.messageHandlerSender import messageHandlerSender
 from src.utils.messages.messageHandlerSubscriber import messageHandlerSubscriber
@@ -32,6 +33,8 @@ class threadautomatic_control(ThreadWithStop):
         self.syncCameraAutomatic = syncCameraAutomatic
         self.counter = 0
         self.currentSign = ""
+        self.signSize = 0
+        self.stopedBefore = False
 
         self.speedSender = messageHandlerSender(self.queuesList, SpeedMotor)
         self.steerSender = messageHandlerSender(self.queuesList, SteerMotor)
@@ -41,41 +44,47 @@ class threadautomatic_control(ThreadWithStop):
         super(threadautomatic_control, self).__init__()
 
     def run(self):
-        
-        time.sleep(1)
         self.klSender.send("30")
         self.syncAutomaticSerial.set()
-        time.sleep(0.5)
-        self.speedSender.send("150")
+        time.sleep(0.2)
+        #self.speedSender.send("150")
         self.syncAutomaticSerial.set()
+        time.sleep(0.2)
         while self._running:
             try:
-                time.sleep(0.5)
                 # TODO: Speed receive
+                #time.sleep(0.05)
+                #self.syncCameraAutomatic.wait()
+                #angle = self.radiusSubscriber.receive()
+                #if angle is not None:
+                    #self.steerSender.send(str(int(angle)))
+                    #self.syncAutomaticSerial.set()
+                
+                time.sleep(0.05)
                 self.syncCameraAutomatic.wait()
-                angle = self.radiusSubscriber.receive()
-                if angle is not None:
-                    self.steerSender.send(str(int(angle)))
-                    self.syncAutomaticSerial.set()
-                
-                if self.counter == 10:
-                    self.currentSign = self.signSubscriber.receive()
+                self.currentSign = self.signSubscriber.receive()
+                time.sleep(0.05)
+                self.signSize = self.signSizeSubscriber.receive()
+
+                if self.currentSign is not None and self.signSize is not None:
                     self.signReaction() 
-                    print(f"Sign that i got is {self.currentSign}")
-                    self.counter = 0
-                
-                self.counter += 1
+                    #print(f"Sign that i got is {self.currentSign}")
+                    #print(f"Area of that sign is {self.signSize}")
             except Exception as e:
                 print(e)
                 
     def signReaction(self):
         
-        if self.currentSign == "Stop Sign":
+        if not self.stopedBefore and self.currentSign == "Stop sign" and self.signSize > 2000:
             self.speedSender.send("0")
             self.syncAutomaticSerial.set()
-            time.sleep(0.5)
+            time.sleep(1)
             self.speedSender.send("150")
             self.syncAutomaticSerial.set()
+            self.stopedBefore = True
+
+        if self.currentSign != "Stop sign":
+            self.stopedBefore = False
 
     def subscribe(self):
         """Subscribes to the messages you are interested in"""
@@ -83,3 +92,4 @@ class threadautomatic_control(ThreadWithStop):
         self.radiusSubscriber = messageHandlerSubscriber(self.queuesList, RadiusLane, "lastonly", True)
         self.klSubscriber = messageHandlerSubscriber(self.queuesList, Klem, "lastonly", True)
         self.signSubscriber = messageHandlerSubscriber(self.queuesList, CurrentSign, "lastOnly", True)
+        self.signSizeSubscriber = messageHandlerSubscriber(self.queuesList, SignSize, "lastOnly", True)

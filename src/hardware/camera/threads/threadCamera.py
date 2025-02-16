@@ -43,7 +43,8 @@ from src.utils.messages.allMessages import (
     Record,
     Brightness,
     Contrast,
-    CurrentSign
+    CurrentSign,
+    SignSize
 )
 from src.utils.messages.messageHandlerSender import messageHandlerSender
 from src.utils.messages.messageHandlerSubscriber import messageHandlerSubscriber
@@ -72,15 +73,18 @@ class threadCamera(ThreadWithStop):
         self.counter = 0
         self.bigCounter = 1
         self.video_writer = ""
-        self.model = YOLO("best.pt")
-
+        self.model = YOLO("/home/oncst/Weights/weights/best.pt")
+ 
         self.recordingSender = messageHandlerSender(self.queuesList, Recording)
         self.mainCameraSender = messageHandlerSender(self.queuesList, mainCamera)
         self.serialCameraSender = messageHandlerSender(self.queuesList, serialCamera)
         self.radiusSender = messageHandlerSender(self.queuesList, RadiusLane)
         self.speedSender = messageHandlerSender(self.queuesList, SpeedLane)
         self.signSender  = messageHandlerSender(self.queuesList, CurrentSign)
+        self.signSizeSender  = messageHandlerSender(self.queuesList, SignSize)
 
+        self.classNames = ["Crosswalk sign", "Highway entrance sign", "Highway exit sign", "No-entry road sign",
+        "One way road sign", "Parking sign", "Pedestrian", "Priority sign", "Round-about sign", "Stop sign"]
         self.subscribe()
         self._init_camera()
         self.Queue_Sending()
@@ -166,34 +170,42 @@ class threadCamera(ThreadWithStop):
                 if self.recording == True:
                     self.video_writer.write(mainRequest)
                 
-                if self.counter == 10:
-                    results = self.model.predict(serialRequest)
-                    max_size = -1
-                    className = ""
-                    for box in results.xyxy[0]:  # Each detection
-                        x_min, y_min, x_max, y_max, conf, cls = box.tolist()
-                        bbox_width = x_max - x_min
-                        bbox_height = y_max - y_min
-                        object_name = results.names[int(cls)]
-                        if bbox_width < max_size:
-                            className = cls
-                            max_size = bbox_width
+                serialRequest = cv2.cvtColor(serialRequest, cv2.COLOR_YUV2BGR_I420)
+                img = serialRequest.copy()
+                if self.counter == 1:
+                    results = self.model(serialRequest, verbose = False)
+                    max_size = -0.6
+                    className = ""                    
+                    if results is not None and hasattr(results[0],"boxes"):
+                        for box in results[0].boxes:  # Each detection
+                            x_min, y_min, x_max, y_max = box.xyxy.tolist()[0]
+                            bbox_width = x_max - x_min
+                            bbox_height = y_max - y_min
+                            object_name = self.classNames[int(box.cls.item())]
+                            surface_area = bbox_width * bbox_height
+                            if surface_area > max_size:
+                                className = object_name
+                                max_size = surface_area
+                            cv2.rectangle(img, (int(x_min), int(y_min)), (int(x_max), int(y_max)), (0, 255, 0), 2)  # Green box
+                            cv2.putText(img, object_name, (int(x_min), int(y_min) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+                      
                     self.counter = 0        
                     self.signSender.send(className)
-
-                         
-                self.counter += 1
-                serialRequest = cv2.cvtColor(serialRequest, cv2.COLOR_YUV2BGR_I420)
+                    time.sleep(0.05)
+                    self.signSizeSender.send(max_size)
+                    self.syncCameraAutomatic.set()
+                
+                self.counter += 1   
                 angle, output_image = lane_following(serialRequest)
                 self.radiusSender.send(float(angle * 10))
                 
                 # _, mainEncodedImg = cv2.imencode(".jpg", mainRequest)
-                _, serialEncodedImg = cv2.imencode(".jpg", output_image)
+                _, serialEncodedImg = cv2.imencode(".jpg", img)
                 serialEncodedImageData = base64.b64encode(serialEncodedImg).decode("utf-8")
                 
                 # self.mainCameraSender.send(mainEncodedImageData)
                 self.serialCameraSender.send(serialEncodedImageData)
-                self.syncCameraAutomatic.set()
+                #self.syncCameraAutomatic.set()
 
             send = not send
 
