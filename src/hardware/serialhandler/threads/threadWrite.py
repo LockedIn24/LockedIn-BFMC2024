@@ -41,7 +41,8 @@ from src.utils.messages.allMessages import (
     ToggleBatteryLvl,
     ToggleImuData,
     ToggleInstant,
-    ToggleResourceMonitor
+    ToggleResourceMonitor,
+    Ultrasonic
 )
 from src.utils.messages.messageHandlerSubscriber import messageHandlerSubscriber
 from src.utils.messages.messageHandlerSender import messageHandlerSender
@@ -70,6 +71,7 @@ class threadWrite(ThreadWithStop):
 
         self.running = False
         self.engineEnabled = False
+        self.obstacleAhead = True
         self.messageConverter = MessageConverter()
         self.steerMotorSender = messageHandlerSender(self.queuesList, SteerMotor)
         self.speedMotorSender = messageHandlerSender(self.queuesList, SpeedMotor)
@@ -96,6 +98,7 @@ class threadWrite(ThreadWithStop):
         self.batterySubscriber = messageHandlerSubscriber(self.queuesList, ToggleBatteryLvl, "lastOnly", True)
         self.resourceMonitorSubscriber = messageHandlerSubscriber(self.queuesList, ToggleResourceMonitor, "lastOnly", True)
         self.imuSubscriber = messageHandlerSubscriber(self.queuesList, ToggleImuData, "lastOnly", True)
+        self.ultrasonicSubscriber = messageHandlerSubscriber(self.queuesList, Ultrasonic, "lastOnly", True)
 
     # ==================================== SENDING =======================================
 
@@ -144,6 +147,7 @@ class threadWrite(ThreadWithStop):
                     if klRecv == "30":
                         self.running = True
                         self.engineEnabled = True
+                        self.obstacleAhead = False
                         command = {"action": "kl", "mode": 30}
                         self.sendToSerial(command)
                         self.loadConfig("sensors")
@@ -158,9 +162,23 @@ class threadWrite(ThreadWithStop):
                         self.engineEnabled = False
                         command = {"action": "kl", "mode": 0}
                         self.sendToSerial(command)
+                        
+                ultrasonicRecv = self.ultrasonicSubscriber.receive()
+                if ultrasonicRecv is not None:
+                    if self.debugger:
+                        self.logger.info(ultrasonicRecv)
+                        
+                    if ultrasonicRecv:
+                        command = {"action": "speed", "speed": 0}
+                        self.sendToSerial(command)
+                        self.obstacleAhead = True
+                    else:
+                        command = {"action": "speed", "speed": 150}
+                        self.sendToSerial(command)
+                        self.obstacleAhead = False
 
                 if self.running:
-                    if self.engineEnabled:
+                    if self.engineEnabled and not self.obstacleAhead:
                         brakeRecv = self.brakeSubscriber.receive()
                         if brakeRecv is not None:
                             if self.debugger:

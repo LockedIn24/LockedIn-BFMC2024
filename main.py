@@ -58,6 +58,7 @@ from src.hardware.serialhandler.processSerialHandler import processSerialHandler
 from src.data.Semaphores.Semaphores import processSemaphores
 from src.data.TrafficCommunication.processTrafficCommunication import processTrafficCommunication
 from src.utils.ipManager.IpReplacement import IPManager
+from object_detection.ultrasonic.processultrasonic import ProcessUltrasonic
 # ------ New component imports starts here ------#
 
 # ------ New component imports ends here ------#
@@ -79,6 +80,7 @@ Semaphores = False
 TrafficCommunication = False
 SerialHandler = True
 AutomaticControl = True
+Ultrasonic = True
 
 # ------ New component flags starts here ------#
 
@@ -128,6 +130,11 @@ if SerialHandler:
 if AutomaticControl:
     processAutomatic = processAutomaticControl(queueList, logging, syncCameraAutomatic, syncAutomaticSerial, debugging=True)
     allProcesses.append(processAutomatic)
+
+# Initializing ultrasonic detection
+if Ultrasonic:
+    processUltrasonic = ProcessUltrasonic(queueList, syncAutomaticSerial, logging, debugging = False)
+    allProcesses.append(processUltrasonic)
 
 # ------ New component runs starts here ------#
 

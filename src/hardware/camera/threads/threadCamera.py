@@ -71,7 +71,6 @@ class threadCamera(ThreadWithStop):
         self.syncCameraAutomatic = syncCameraAutomatic
        
         self.counter = 0
-        self.bigCounter = 1
         self.video_writer = ""
         self.model = YOLO("/home/oncst/Weights/weights/best.pt")
  
@@ -172,7 +171,7 @@ class threadCamera(ThreadWithStop):
                 
                 serialRequest = cv2.cvtColor(serialRequest, cv2.COLOR_YUV2BGR_I420)
                 img = serialRequest.copy()
-                if self.counter == 1:
+                if self.counter == 2:
                     results = self.model(serialRequest, verbose = False)
                     max_size = -0.6
                     className = ""                    
@@ -198,14 +197,15 @@ class threadCamera(ThreadWithStop):
                 self.counter += 1   
                 angle, output_image = lane_following(serialRequest)
                 self.radiusSender.send(float(angle * 10))
+                self.syncCameraAutomatic.set()
                 cv2.imwrite("/home/oncst/slikePoslao/slika2.jpg", serialRequest)
+                
                 # _, mainEncodedImg = cv2.imencode(".jpg", mainRequest)
                 _, serialEncodedImg = cv2.imencode(".jpg", img)
                 serialEncodedImageData = base64.b64encode(serialEncodedImg).decode("utf-8")
                 
                 # self.mainCameraSender.send(mainEncodedImageData)
                 self.serialCameraSender.send(serialEncodedImageData)
-                #self.syncCameraAutomatic.set()
 
             send = not send
 
