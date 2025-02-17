@@ -38,7 +38,7 @@ def lane_following(image):
     # Step 3: Region of interest (ROI) to focus on the lane area
     height, width = edges.shape
     roi = np.zeros_like(edges)
-    roi_vertices = np.array([[(20, 160), (width // 2 - 80, 20), (width // 2 + 80, 20), (width - 20, 160)]], dtype=np.int32)
+    roi_vertices = np.array([[(90, 250), (200, 90), (width - 200, 90), (width - 90, 250)]], dtype=np.int32)
     cv2.fillPoly(roi, roi_vertices, 255)
     masked_edges = cv2.bitwise_and(edges, roi)
 
@@ -106,7 +106,7 @@ def lane_following(image):
     
     
     distance = height // 2
-    wheelbaseLength = 260
+    wheelbaseLength = 150
     steering_angle = math.atan(2*wheelbaseLength*error/distance**2)
     steering_angle = max(-25, min(steering_angle, 25))
 
