@@ -196,8 +196,8 @@ class threadCamera(ThreadWithStop):
                 
                 self.counter += 1   
                 angle, output_image = lane_following(serialRequest)
-                self.radiusSender.send(float(angle * 10))
-                self.syncCameraAutomatic.set()
+                #self.radiusSender.send(float(angle * 10))
+                #self.syncCameraAutomatic.set()
                 cv2.imwrite("/home/oncst/slikePoslao/slika2.jpg", serialRequest)
                 
                 # _, mainEncodedImg = cv2.imencode(".jpg", mainRequest)

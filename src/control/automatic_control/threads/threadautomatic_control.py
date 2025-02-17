@@ -54,12 +54,12 @@ class threadautomatic_control(ThreadWithStop):
         while self._running:
             try:
                 # TODO: Speed receive
-                time.sleep(0.05)
-                self.syncCameraAutomatic.wait()
-                angle = self.radiusSubscriber.receive()
-                if angle is not None:
-                    self.steerSender.send(str(int(angle)))
-                    self.syncAutomaticSerial.set()
+                #time.sleep(0.05)
+                #self.syncCameraAutomatic.wait()
+                #angle = self.radiusSubscriber.receive()
+                #if angle is not None:
+                    #self.steerSender.send(str(int(angle)))
+                    #self.syncAutomaticSerial.set()
                 
                 time.sleep(0.05)
                 self.syncCameraAutomatic.wait()

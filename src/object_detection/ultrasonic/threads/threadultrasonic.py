@@ -37,12 +37,9 @@ class threadultrasonic(ThreadWithStop):
         if value == 1:
             self.ultrasonicSender.send(True)
             self.syncAutomaticSerial.set()
-            #print(f"Rising edge detected: Arduino sent HIGH (1) on pin {self.signalPin}")
         else:
             self.ultrasonicSender.send(False)
             self.syncAutomaticSerial.set()
-            #print(f"Falling edge detected: Arduino sent LOW (0) on pin {self.signalPin}")
-
 
     def run(self):
         try:
@@ -53,8 +50,10 @@ class threadultrasonic(ThreadWithStop):
 
                  # When an event occurs, read the current value
                 value = self.line.get_value()
-
+                
+                
                 if value != last_value:
+                    last_value = value
                     # Detect if it's a rising or falling edge
                     if value == 1:
                         self.signal_callback(1)  # Rising edge

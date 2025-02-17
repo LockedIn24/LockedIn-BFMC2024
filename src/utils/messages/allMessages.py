@@ -35,7 +35,7 @@ class Ultrasonic(Enum):
     Queue = "Critical"
     Owner = "threadUltrasonic"
     msgID = 1
-    msType = "bool"
+    msgType = "bool"
 
 ####################################### SignDetection #######################################
 
