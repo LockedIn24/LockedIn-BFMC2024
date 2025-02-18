@@ -35,6 +35,7 @@ class threadautomatic_control(ThreadWithStop):
         self.currentSign = ""
         self.signSize = 0
         self.stopedBefore = False
+        
 
         self.speedSender = messageHandlerSender(self.queuesList, SpeedMotor)
         self.steerSender = messageHandlerSender(self.queuesList, SteerMotor)
@@ -86,6 +87,21 @@ class threadautomatic_control(ThreadWithStop):
 
         if self.currentSign != "Stop sign":
             self.stopedBefore = False
+            
+        if self.currentSign == "Highway entrance sign" and self.signSize > 2000:
+            self.speedSender.send("300")
+            self.syncAutomaticSerial.set()
+            
+        if self.currentSign == "Highway exit sign" and self.signSize > 2000: 
+            self.speedSender.send("150")
+            self.syncAutomaticSerial.set()
+            
+        if self.currentSign == "Crosswalk sign" and self.signSize > 2000:
+            self.speedSender.send("50")
+            self.syncAutomaticSerial.set()
+            time.sleep(0.5)
+            self.speedSender.send("150")
+            self.syncAutomaticSerial.set()
 
     def subscribe(self):
         """Subscribes to the messages you are interested in"""

@@ -190,6 +190,7 @@ class threadCamera(ThreadWithStop):
                       
                     self.counter = 0        
                     self.signSender.send(className)
+                    self.syncCameraAutomatic.set()
                     time.sleep(0.05)
                     self.signSizeSender.send(max_size)
                     self.syncCameraAutomatic.set()

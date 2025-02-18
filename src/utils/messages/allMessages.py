@@ -29,13 +29,14 @@
 from enum import Enum
 
 
+
 ####################################### Ultrasonic ##########################################
 
 class Ultrasonic(Enum):
     Queue = "Critical"
     Owner = "threadUltrasonic"
     msgID = 1
-    msType = "bool"
+    msgType = "bool"
 
 ####################################### SignDetection #######################################
 
@@ -259,7 +260,13 @@ class WarningSignal(Enum):
     Owner = "threadRead"
     msgID = 7
     msgType = "str"
-
+    
+class Speed(Enum):
+    Queue = "General"
+    Owner = "threadRead"
+    msgID = 8
+    msgType = "int"
+    
 ################################# From Locsys ##################################
 class Location(Enum):
     Queue = "General"
