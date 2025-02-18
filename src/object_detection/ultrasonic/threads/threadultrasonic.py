@@ -55,6 +55,7 @@ class threadultrasonic(ThreadWithStop):
                 value = self.line.get_value()
 
                 if value != last_value:
+                    last_value = value
                     # Detect if it's a rising or falling edge
                     if value == 1:
                         self.signal_callback(1)  # Rising edge

@@ -55,12 +55,12 @@ class threadautomatic_control(ThreadWithStop):
         while self._running:
             try:
                 # TODO: Speed receive
-                time.sleep(0.05)
-                self.syncCameraAutomatic.wait()
-                angle = self.radiusSubscriber.receive()
-                if angle is not None:
-                    self.steerSender.send(str(int(angle)))
-                    self.syncAutomaticSerial.set()
+                #time.sleep(0.05)
+                #self.syncCameraAutomatic.wait()
+                #angle = self.radiusSubscriber.receive()
+                #if angle is not None:
+                    #self.steerSender.send(str(int(angle)))
+                    #self.syncAutomaticSerial.set()
                 
                 time.sleep(0.05)
                 self.syncCameraAutomatic.wait()
@@ -70,7 +70,7 @@ class threadautomatic_control(ThreadWithStop):
 
                 if self.currentSign is not None and self.signSize is not None:
                     self.signReaction() 
-                    #print(f"Sign that i got is {self.currentSign}")
+                    print(f"Sign that i got is {self.currentSign}")
                     #print(f"Area of that sign is {self.signSize}")
             except Exception as e:
                 print(e)
