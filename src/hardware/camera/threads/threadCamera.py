@@ -66,7 +66,7 @@ class threadCamera(ThreadWithStop):
         self.queuesList = queuesList
         self.logger = logger
         self.debugger = debugger
-        self.frame_rate = 30
+        self.frame_rate = 20
         self.recording = False
         self.syncCameraAutomatic = syncCameraAutomatic
        
@@ -156,7 +156,7 @@ class threadCamera(ThreadWithStop):
                             "output_video" + str(time.time()) + ".avi",
                             fourcc,
                             self.frame_rate,
-                            (2048, 1080),
+                            (512, 270),
                         )
 
             except Exception as e:
@@ -166,12 +166,12 @@ class threadCamera(ThreadWithStop):
                 mainRequest = self.camera.capture_array("main")
                 serialRequest = self.camera.capture_array("lores")  # Will capture an array that can be used by OpenCV library
 
-                if self.recording == True:
-                    self.video_writer.write(mainRequest)
+                #if self.recording == True:
+                    #self.video_writer.write(mainRequest)
                 
                 serialRequest = cv2.cvtColor(serialRequest, cv2.COLOR_YUV2BGR_I420)
                 img = serialRequest.copy()
-                if self.counter == 2:
+                if self.counter == 1:
                     results = self.model(serialRequest, verbose = False)
                     max_size = -0.6
                     className = ""                    
@@ -194,12 +194,14 @@ class threadCamera(ThreadWithStop):
                     self.signSizeSender.send(max_size)
                     self.syncCameraAutomatic.set()
                 
+                if self.recording == True:
+                    self.video_writer.write(img)
                 self.counter += 1   
                 angle, output_image = lane_following(serialRequest)
                 #self.radiusSender.send(float(angle * 10))
                 #self.syncCameraAutomatic.set()
-                cv2.imwrite("/home/oncst/slikePoslao/slika2.jpg", serialRequest)
-                
+                #cv2.imwrite("/home/oncst/slikePoslao/slika2.jpg", serialRequest)
+              
                 # _, mainEncodedImg = cv2.imencode(".jpg", mainRequest)
                 _, serialEncodedImg = cv2.imencode(".jpg", img)
                 serialEncodedImageData = base64.b64encode(serialEncodedImg).decode("utf-8")

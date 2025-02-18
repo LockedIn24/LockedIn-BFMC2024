@@ -47,8 +47,8 @@ class threadautomatic_control(ThreadWithStop):
         time.sleep(0.5)
         self.klSender.send("30")
         self.syncAutomaticSerial.set()
-        time.sleep(0.2)
-        self.speedSender.send("150")
+        time.sleep(5)
+        self.speedSender.send("25")
         self.syncAutomaticSerial.set()
         time.sleep(0.2)
         while self._running:
@@ -61,26 +61,26 @@ class threadautomatic_control(ThreadWithStop):
                     #self.steerSender.send(str(int(angle)))
                     #self.syncAutomaticSerial.set()
                 
-                time.sleep(0.05)
+                time.sleep(0.01)
                 self.syncCameraAutomatic.wait()
                 self.currentSign = self.signSubscriber.receive()
-                time.sleep(0.05)
+                time.sleep(0.01)
                 self.signSize = self.signSizeSubscriber.receive()
 
                 if self.currentSign is not None and self.signSize is not None:
                     self.signReaction() 
-                    #print(f"Sign that i got is {self.currentSign}")
-                    #print(f"Area of that sign is {self.signSize}")
+                    print(f"Sign that i got is {self.currentSign}")
+                    print(f"Area of that sign is {self.signSize}")
             except Exception as e:
                 print(e)
                 
     def signReaction(self):
         
-        if not self.stopedBefore and self.currentSign == "Stop sign" and self.signSize > 2000:
-            self.speedSender.send("0")
+        if not self.stopedBefore and self.currentSign == "Stop sign" and self.signSize > 1000:
+            #self.speedSender.send("0")
             self.syncAutomaticSerial.set()
             time.sleep(1)
-            self.speedSender.send("150")
+            #self.speedSender.send("150")
             self.syncAutomaticSerial.set()
             self.stopedBefore = True
 
