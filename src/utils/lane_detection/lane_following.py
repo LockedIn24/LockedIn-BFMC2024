@@ -86,6 +86,8 @@ def lane_following(image):
                 right_lane_y.extend([y1, y2])
                 #cv2.line(masked_image, (x1, y1), (x2, y2), (0, 255, 0), 2)
     
+    left_lane_center = np.mean(left_lane_x) if left_lane_x else 0
+    right_lane_center = np.mean(right_lane_x) if right_lane_x else width
     
     left_lane_x = np.array(left_lane_x)
     left_lane_y = np.array(left_lane_y)
@@ -108,8 +110,7 @@ def lane_following(image):
     cv2.line(image, (x_min_right, y_min_right), (x_max_right, y_max_right), (0, 255, 0), 2)  # Green line
     
     
-    left_lane_center = np.mean(left_lane_x) if left_lane_x else 0
-    right_lane_center = np.mean(right_lane_x) if right_lane_x else width
+    
     middle_of_lane = (left_lane_center + right_lane_center) / 2
 
     # Step 6: Calculate angle
