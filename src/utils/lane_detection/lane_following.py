@@ -99,4 +99,4 @@ def lane_following(image):
     # cv2.line(image, (image_center_x, height), (lane_center_x, height), (0, 255, 0), 2)
     # cv2.putText(image, f"Steering Angle: {steering_angle:.2f}", (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
-    return servo_angle1, image
+    return servo_angle1

@@ -193,13 +193,11 @@ class threadCamera(ThreadWithStop):
                     time.sleep(0.05)
                     self.signSizeSender.send(max_size)
                     self.syncCameraAutomatic.set()
-                
-                if self.recording == True:
-                    self.video_writer.write(img)
+        
                 self.counter += 1   
-                angle, output_image = lane_following(serialRequest)
-                #self.radiusSender.send(float(angle * 10))
-                #self.syncCameraAutomatic.set()
+                angle = lane_following(serialRequest)
+                self.radiusSender.send(float(angle * 10))
+                self.syncCameraAutomatic.set()
                 #cv2.imwrite("/home/oncst/slikePoslao/slika2.jpg", serialRequest)
               
                 # _, mainEncodedImg = cv2.imencode(".jpg", mainRequest)

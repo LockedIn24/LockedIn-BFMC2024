@@ -48,18 +48,18 @@ class threadautomatic_control(ThreadWithStop):
         self.klSender.send("30")
         self.syncAutomaticSerial.set()
         time.sleep(5)
-        self.speedSender.send("25")
+        self.speedSender.send("150")
         self.syncAutomaticSerial.set()
         time.sleep(0.2)
         while self._running:
             try:
                 # TODO: Speed receive
-                #time.sleep(0.05)
-                #self.syncCameraAutomatic.wait()
-                #angle = self.radiusSubscriber.receive()
-                #if angle is not None:
-                    #self.steerSender.send(str(int(angle)))
-                    #self.syncAutomaticSerial.set()
+                time.sleep(0.05)
+                self.syncCameraAutomatic.wait()
+                angle = self.radiusSubscriber.receive()
+                if angle is not None:
+                    self.steerSender.send(str(int(angle)))
+                    self.syncAutomaticSerial.set()
                 
                 time.sleep(0.01)
                 self.syncCameraAutomatic.wait()
@@ -77,10 +77,10 @@ class threadautomatic_control(ThreadWithStop):
     def signReaction(self):
         
         if not self.stopedBefore and self.currentSign == "Stop sign" and self.signSize > 1000:
-            #self.speedSender.send("0")
+            self.speedSender.send("0")
             self.syncAutomaticSerial.set()
             time.sleep(1)
-            #self.speedSender.send("150")
+            self.speedSender.send("150")
             self.syncAutomaticSerial.set()
             self.stopedBefore = True
 
