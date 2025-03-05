@@ -71,17 +71,43 @@ def lane_following(image):
     # Step 5: Compute the lane center
     left_lane_x = []
     right_lane_x = []
+    left_lane_y = []
+    right_lane_y = []
     if lines is not None:
         for line in lines:
             x1, y1, x2, y2 = line[0]
             slope = (y2 - y1) / (x2 - x1) if x2 != x1 else np.inf
             if slope > -2 and slope < -0.5:
                 left_lane_x.extend([x1, x2])
-                #cv2.line(output_image, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                left_lane_y.extend([y1, y2])
+                #cv2.line(masked_image, (x1, y1), (x2, y2), (0, 255, 0), 2)
             elif slope > 0.5 and slope < 2:
                 right_lane_x.extend([x1, x2])
-                #cv2.line(output_image, (x1, y1), (x2, y2), (0, 255, 0), 2)
-
+                right_lane_y.extend([y1, y2])
+                #cv2.line(masked_image, (x1, y1), (x2, y2), (0, 255, 0), 2)
+    
+    
+    left_lane_x = np.array(left_lane_x)
+    left_lane_y = np.array(left_lane_y)
+    right_lane_x = np.array(right_lane_x)
+    right_lane_y = np.array(right_lane_y)
+    
+    left_coefficients = np.polyfit(left_lane_x, left_lane_y, deg=1)
+    l_m, l_c = left_coefficients  # m = slope, c = intercept
+    right_coefficients = np.polyfit(right_lane_x, right_lane_y, deg=1)
+    r_m, r_c = right_coefficients
+    
+    x_min_left, x_max_left = min(left_lane_x), max(left_lane_x)  # Use detected x-points range
+    y_min_left = int(l_m * x_min_left + l_c)
+    y_max_left = int(l_m* x_max_left + l_c)
+    cv2.line(image, (x_min_left, y_min_left), (x_max_left, y_max_left), (0, 255, 0), 2)  # Green line
+    
+    x_min_right, x_max_right = min(right_lane_x), max(right_lane_x)  # Use detected x-points range
+    y_min_right = int(r_m * x_min_right + r_c)
+    y_max_right = int(r_m* x_max_right + r_c)
+    cv2.line(image, (x_min_right, y_min_right), (x_max_right, y_max_right), (0, 255, 0), 2)  # Green line
+    
+    
     left_lane_center = np.mean(left_lane_x) if left_lane_x else 0
     right_lane_center = np.mean(right_lane_x) if right_lane_x else width
     middle_of_lane = (left_lane_center + right_lane_center) / 2
@@ -92,11 +118,11 @@ def lane_following(image):
          
     # Step 8: Visualization
     
-    # if left_x is not None and right_x is not None:
-    #     # Draw lane center
-    #     cv2.line(image, (int(left_x), height), (int(right_x), height), (0, 255, 255), 2)  # Yellow line for lane width
-    #     cv2.circle(image, (lane_center_x, height), 5, (0, 255, 0), -1)  # Green circle for lane center
-    # cv2.line(image, (image_center_x, height), (lane_center_x, height), (0, 255, 0), 2)
-    # cv2.putText(image, f"Steering Angle: {steering_angle:.2f}", (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+    
+    # Draw lane center
 
-    return servo_angle1
+    # cv2.circle(image, (middle_of_lane, height), 5, (0, 255, 0), -1)  # Green circle for lane center
+    # cv2.line(image, (width / 2, height), (middle_of_lane, height), (0, 255, 0), 2)
+    # cv2.putText(image, f"Steering Angle: {servo_angle1:.2f}", (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+
+    return servo_angle1, image
