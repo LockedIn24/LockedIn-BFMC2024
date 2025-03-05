@@ -76,7 +76,7 @@ class threadautomatic_control(ThreadWithStop):
                 
     def signReaction(self):
         
-        if not self.stopedBefore and self.currentSign == "Stop sign" and self.signSize > 1000:
+        if not self.stopedBefore and self.currentSign == "Stop sign" and self.signSize > 2000:
             self.speedSender.send("0")
             self.syncAutomaticSerial.set()
             time.sleep(1)
@@ -86,6 +86,21 @@ class threadautomatic_control(ThreadWithStop):
 
         if self.currentSign != "Stop sign":
             self.stopedBefore = False
+            
+        if self.currentSign == "Highway entrance sign" and self.signSize > 2000:
+            self.speedSender.send("300")
+            self.syncAutomaticSerial.set()
+            
+        if self.currentSign == "Highway exit sign" and self.signSize > 2000: 
+            self.speedSender.send("150")
+            self.syncAutomaticSerial.set()
+            
+        if self.currentSign == "Crosswalk sign" and self.signSize > 2000:
+            self.speedSender.send("50")
+            self.syncAutomaticSerial.set()
+            time.sleep(0.5)
+            self.speedSender.send("150")
+            self.syncAutomaticSerial.set()
 
     def subscribe(self):
         """Subscribes to the messages you are interested in"""
