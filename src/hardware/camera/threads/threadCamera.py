@@ -43,8 +43,7 @@ from src.utils.messages.allMessages import (
     Record,
     Brightness,
     Contrast,
-    CurrentSign,
-    SignSize
+    CurrentSign
 )
 from src.utils.messages.messageHandlerSender import messageHandlerSender
 from src.utils.messages.messageHandlerSubscriber import messageHandlerSubscriber
@@ -80,10 +79,7 @@ class threadCamera(ThreadWithStop):
         self.radiusSender = messageHandlerSender(self.queuesList, RadiusLane)
         self.speedSender = messageHandlerSender(self.queuesList, SpeedLane)
         self.signSender  = messageHandlerSender(self.queuesList, CurrentSign)
-        self.signSizeSender  = messageHandlerSender(self.queuesList, SignSize)
 
-        self.classNames = ["Crosswalk sign", "Highway entrance sign", "Highway exit sign", "No-entry road sign",
-        "One way road sign", "Parking sign", "Pedestrian", "Priority sign", "Round-about sign", "Stop sign"]
         self.subscribe()
         self._init_camera()
         self.Queue_Sending()
@@ -174,25 +170,24 @@ class threadCamera(ThreadWithStop):
                 if self.counter == 1:
                     results = self.model(serialRequest, verbose = False)
                     max_size = -0.6
-                    className = ""                    
+                    classId = -1                    
                     if results is not None and hasattr(results[0],"boxes"):
                         for box in results[0].boxes:  # Each detection
                             x_min, y_min, x_max, y_max = box.xyxy.tolist()[0]
                             bbox_width = x_max - x_min
                             bbox_height = y_max - y_min
-                            object_name = self.classNames[int(box.cls.item())]
+                            objectId = int(box.cls.item())
                             surface_area = bbox_width * bbox_height
                             if surface_area > max_size:
-                                className = object_name
+                                classId = objectId
                                 max_size = surface_area
                             cv2.rectangle(img, (int(x_min), int(y_min)), (int(x_max), int(y_max)), (0, 255, 0), 2)  # Green box
-                            cv2.putText(img, object_name, (int(x_min), int(y_min) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+                            cv2.putText(img, objectId, (int(x_min), int(y_min) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
                       
                     self.counter = 0        
-                    self.signSender.send(className)
-                    time.sleep(0.05)
-                    self.signSizeSender.send(max_size)
-                    self.syncCameraAutomatic.set()
+                    if max_size > 2000:
+                        self.signSender.send(classId)
+                        self.syncCameraAutomatic.set()
         
                 self.counter += 1   
                 angle, image = lane_following(serialRequest)

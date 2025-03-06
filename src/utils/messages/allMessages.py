@@ -43,13 +43,7 @@ class CurrentSign(Enum):
     Queue = "General"
     Owner = "threadSign"
     msgID = 1
-    msgType = "str"
-
-class SignSize(Enum):
-    Queue = "General"
-    Owner = "threadSign"
-    msgID = 2
-    msgType = "float"
+    msgType = "int"
 ####################################### laneDetection #######################################
 
 class SpeedLane(Enum): 

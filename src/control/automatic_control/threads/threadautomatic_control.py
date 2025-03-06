@@ -1,4 +1,3 @@
-import math
 import time
 
 from src.templates.threadwithstop import ThreadWithStop
@@ -9,12 +8,12 @@ from src.utils.messages.allMessages import (
     SpeedLane,
     SpeedMotor,
     SteerMotor,
-    CurrentSign,
-    SignSize
+    CurrentSign
 )
 from src.utils.messages.messageHandlerSender import messageHandlerSender
 from src.utils.messages.messageHandlerSubscriber import messageHandlerSubscriber
 
+from collections import defaultdict
 
 class threadautomatic_control(ThreadWithStop):
     """This thread handles automatic_control.
@@ -31,9 +30,8 @@ class threadautomatic_control(ThreadWithStop):
         self.subscribe()
         self.syncAutomaticSerial = syncAutomaticSerial
         self.syncCameraAutomatic = syncCameraAutomatic
-        self.counter = 0
-        self.currentSign = ""
-        self.signSize = 0
+        self.currentSign = -1
+        self.signs = defaultdict(int)
         self.stopedBefore = False
 
         self.speedSender = messageHandlerSender(self.queuesList, SpeedMotor)
@@ -64,43 +62,43 @@ class threadautomatic_control(ThreadWithStop):
                 time.sleep(0.01)
                 self.syncCameraAutomatic.wait()
                 self.currentSign = self.signSubscriber.receive()
-                time.sleep(0.01)
-                self.signSize = self.signSizeSubscriber.receive()
 
-                if self.currentSign is not None and self.signSize is not None:
+                if self.currentSign is not None:
                     self.signReaction() 
                     print(f"Sign that i got is {self.currentSign}")
-                    print(f"Area of that sign is {self.signSize}")
             except Exception as e:
                 print(e)
                 
     def signReaction(self):
-        
-        if not self.stopedBefore and self.currentSign == "Stop sign" and self.signSize > 2000:
-            self.speedSender.send("0")
-            self.syncAutomaticSerial.set()
-            time.sleep(1)
-            self.speedSender.send("150")
-            self.syncAutomaticSerial.set()
-            self.stopedBefore = True
 
-        if self.currentSign != "Stop sign":
-            self.stopedBefore = False
+        self.signs[self.currentSign] += 1
+        # TODO: proveri broj frejmova koje mreza detektuje u sekundi, da bi odredio N
+        if self.signs[self.currentSign] == 3:
+            if self.currentSign == 0:       # Crosswalk
+                self.crosswalkSign()
+            elif self.currentSign == 1:     # Highway entrance    
+                self.highwayEntranceSign()
+            elif self.currentSign == 2:     # Highway exit    
+                self.highwayExitSign()
+            elif self.currentSign == 3:     # No entry road - delete later??
+                pass
+            elif self.currentSign == 4:     # One way road    
+                pass
+            elif self.currentSign == 5:     # Parking    
+                pass
+            elif self.currentSign == 6:     # Pedestrian - delete later    
+                pass
+            elif self.currentSign == 7:     # Priority    
+                pass
+            elif self.currentSign == 8:     # Round-about
+                pass
+            elif self.currentSign == 9 and not self.stopedBefore:     # Stop
+                self.stopSign()
             
-        if self.currentSign == "Highway entrance sign" and self.signSize > 2000:
-            self.speedSender.send("300")
-            self.syncAutomaticSerial.set()
-            
-        if self.currentSign == "Highway exit sign" and self.signSize > 2000: 
-            self.speedSender.send("150")
-            self.syncAutomaticSerial.set()
-            
-        if self.currentSign == "Crosswalk sign" and self.signSize > 2000:
-            self.speedSender.send("50")
-            self.syncAutomaticSerial.set()
-            time.sleep(0.5)
-            self.speedSender.send("150")
-            self.syncAutomaticSerial.set()
+            if self.stopedBefore and self.currentSign != 9:
+                self.stopedBefore = False
+
+            self.signs.clear()    
 
     def subscribe(self):
         """Subscribes to the messages you are interested in"""
@@ -108,4 +106,26 @@ class threadautomatic_control(ThreadWithStop):
         self.radiusSubscriber = messageHandlerSubscriber(self.queuesList, RadiusLane, "lastonly", True)
         self.klSubscriber = messageHandlerSubscriber(self.queuesList, Klem, "lastonly", True)
         self.signSubscriber = messageHandlerSubscriber(self.queuesList, CurrentSign, "lastOnly", True)
-        self.signSizeSubscriber = messageHandlerSubscriber(self.queuesList, SignSize, "lastOnly", True)
+
+    def stopSign(self):
+        self.speedSender.send("0")
+        self.syncAutomaticSerial.set()
+        time.sleep(1)
+        self.speedSender.send("150")
+        self.syncAutomaticSerial.set()
+        self.stopedBefore = True
+
+    def highwayEntranceSign(self):
+        self.speedSender.send("300")
+        self.syncAutomaticSerial.set()
+
+    def highwayExitSign(self):
+        self.speedSender.send("150")
+        self.syncAutomaticSerial.set()
+    
+    def crosswalkSign(self):
+        self.speedSender.send("50")
+        self.syncAutomaticSerial.set()
+        time.sleep(0.5)
+        self.speedSender.send("150")
+        self.syncAutomaticSerial.set()
