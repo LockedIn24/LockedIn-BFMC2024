@@ -41,7 +41,8 @@ from src.utils.messages.allMessages import (
     ResourceMonitor,
     CurrentSpeed,
     CurrentSteer,
-    WarningSignal
+    WarningSignal,
+    Speed
 )
 from src.utils.messages.messageHandlerSender import messageHandlerSender
 
@@ -77,6 +78,7 @@ class threadRead(ThreadWithStop):
         self.currentSpeedSender = messageHandlerSender(self.queuesList, CurrentSpeed)
         self.currentSteerSender = messageHandlerSender(self.queuesList, CurrentSteer)
         self.warningSender = messageHandlerSender(self.queuesList, WarningSignal)
+        self.speedSender = messageHandlerSender(self.queuesList, Speed)
 
         self.expectedValues = {"kl": "0, 15 or 30", "instant": "1 or 0", "battery": "1 or 0",
                                "resourceMonitor": "1 or 0", "imu": "1 or 0", "steer" : "between -25 and 25", 
@@ -125,7 +127,11 @@ class threadRead(ThreadWithStop):
         if action == "speed":
             speed = value.split(",")[0]
             if self.isFloat(speed):
-                self.currentSpeedSender.send(float(speed))
+                speed = float(speed)
+                self.currentSpeedSender.send(speed)
+                speedConverted = int(speed)
+                if speedConverted > 0:
+                    self.speedSender.send(speedConverted)
 
         elif action == "steer":
             steer = value.split(",")[0]

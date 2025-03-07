@@ -42,7 +42,8 @@ from src.utils.messages.allMessages import (
     ToggleImuData,
     ToggleInstant,
     ToggleResourceMonitor,
-    Ultrasonic
+    Ultrasonic,
+    Speed
 )
 from src.utils.messages.messageHandlerSubscriber import messageHandlerSubscriber
 from src.utils.messages.messageHandlerSender import messageHandlerSender
@@ -69,6 +70,7 @@ class threadWrite(ThreadWithStop):
         self.debugger = debugger
         self.syncAutomaticSerial = syncAutomaticSerial
 
+        self.currentSpeed = 0
         self.running = False
         self.engineEnabled = False
         self.obstacleAhead = True
@@ -99,6 +101,7 @@ class threadWrite(ThreadWithStop):
         self.resourceMonitorSubscriber = messageHandlerSubscriber(self.queuesList, ToggleResourceMonitor, "lastOnly", True)
         self.imuSubscriber = messageHandlerSubscriber(self.queuesList, ToggleImuData, "lastOnly", True)
         self.ultrasonicSubscriber = messageHandlerSubscriber(self.queuesList, Ultrasonic, "lastOnly", True)
+        self.speedSubscriber = messageHandlerSubscriber(self.queuesList, Speed, "lastOnly", True)
 
     # ==================================== SENDING =======================================
 
@@ -173,9 +176,14 @@ class threadWrite(ThreadWithStop):
                         self.sendToSerial(command)
                         self.obstacleAhead = True
                     else:
-                        command = {"action": "speed", "speed": 150}
+                        command = {"action": "speed", "speed": self.currentSpeed}
                         self.sendToSerial(command)
                         self.obstacleAhead = False
+                        
+                measuredSpeedReceived = self.speedSubscriber.receive()
+                if measuredSpeedReceived is not None:
+                    self.currentSpeed = measuredSpeedReceived
+                    print(self.currentSpeed)
 
                 if self.running:
                     if self.engineEnabled and not self.obstacleAhead:

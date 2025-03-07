@@ -181,8 +181,8 @@ class threadCamera(ThreadWithStop):
                             if surface_area > max_size:
                                 classId = objectId
                                 max_size = surface_area
-                            cv2.rectangle(img, (int(x_min), int(y_min)), (int(x_max), int(y_max)), (0, 255, 0), 2)  # Green box
-                            cv2.putText(img, objectId, (int(x_min), int(y_min) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+                            #cv2.rectangle(img, (int(x_min), int(y_min)), (int(x_max), int(y_max)), (0, 255, 0), 2)  # Green box
+                            #cv2.putText(img, objectId, (int(x_min), int(y_min) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
                       
                     self.counter = 0        
                     if max_size > 2000:

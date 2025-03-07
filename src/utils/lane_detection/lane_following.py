@@ -94,20 +94,26 @@ def lane_following(image):
     right_lane_x = np.array(right_lane_x)
     right_lane_y = np.array(right_lane_y)
     
-    left_coefficients = np.polyfit(left_lane_x, left_lane_y, deg=1)
-    l_m, l_c = left_coefficients  # m = slope, c = intercept
-    right_coefficients = np.polyfit(right_lane_x, right_lane_y, deg=1)
-    r_m, r_c = right_coefficients
+    l_m, l_c = 0, 0
+    r_m, r_c = 0, 0 
+    if left_lane_x.size != 0:
+        left_coefficients = np.polyfit(left_lane_x, left_lane_y, deg=1)
+        l_m, l_c = left_coefficients  
+    if right_lane_x.size != 0:
+        right_coefficients = np.polyfit(right_lane_x, right_lane_y, deg=1)
+        r_m, r_c = right_coefficients
     
-    x_min_left, x_max_left = min(left_lane_x), max(left_lane_x)  # Use detected x-points range
-    y_min_left = int(l_m * x_min_left + l_c)
-    y_max_left = int(l_m* x_max_left + l_c)
-    cv2.line(image, (x_min_left, y_min_left), (x_max_left, y_max_left), (0, 255, 0), 2)  # Green line
+    if l_m != 0:    
+        x_min_left, x_max_left = min(left_lane_x), max(left_lane_x)  # Use detected x-points range
+        y_min_left = int(l_m * x_min_left + l_c)
+        y_max_left = int(l_m* x_max_left + l_c)
+        cv2.line(image, (x_min_left, y_min_left), (x_max_left, y_max_left), (0, 255, 0), 2)  # Green line
     
-    x_min_right, x_max_right = min(right_lane_x), max(right_lane_x)  # Use detected x-points range
-    y_min_right = int(r_m * x_min_right + r_c)
-    y_max_right = int(r_m* x_max_right + r_c)
-    cv2.line(image, (x_min_right, y_min_right), (x_max_right, y_max_right), (0, 255, 0), 2)  # Green line
+    if r_m != 0:
+        x_min_right, x_max_right = min(right_lane_x), max(right_lane_x)  # Use detected x-points range
+        y_min_right = int(r_m * x_min_right + r_c)
+        y_max_right = int(r_m* x_max_right + r_c)
+        cv2.line(image, (x_min_right, y_min_right), (x_max_right, y_max_right), (0, 255, 0), 2)  # Green line
     
     
     

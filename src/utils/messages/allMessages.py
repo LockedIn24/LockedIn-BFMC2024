@@ -254,6 +254,12 @@ class WarningSignal(Enum):
     msgID = 7
     msgType = "str"
 
+class Speed(Enum):
+    Queue = "General"
+    Owner = "threadRead"
+    msgID = 8
+    msgType = "int"
+
 ################################# From Locsys ##################################
 class Location(Enum):
     Queue = "General"
