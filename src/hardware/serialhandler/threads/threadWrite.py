@@ -1,3 +1,5 @@
+
+
 # Copyright (c) 2019, Bosch Engineering Center Cluj and BFMC organizers
 # All rights reserved.
 
@@ -168,6 +170,7 @@ class threadWrite(ThreadWithStop):
                         
                 ultrasonicRecv = self.ultrasonicSubscriber.receive()
                 if ultrasonicRecv is not None:
+                    print(f"Ultrasonic received: {ultrasonicRecv}")
                     if self.debugger:
                         self.logger.info(ultrasonicRecv)
                         
@@ -220,26 +223,26 @@ class threadWrite(ThreadWithStop):
                             }
                             self.sendToSerial(command)
 
-                    instantRecv = self.instantSubscriber.receive()
-                    if instantRecv is not None: 
-                        if self.debugger:
-                            self.logger.info(instantRecv) 
-                        command = {"action": "instant", "activate": int(instantRecv)}
-                        self.sendToSerial(command)
+                    #instantRecv = self.instantSubscriber.receive()
+                    #if instantRecv is not None: 
+                       # if self.debugger:
+                        #    self.logger.info(instantRecv) 
+                        #command = {"action": "instant", "activate": int(instantRecv)}
+                        #self.sendToSerial(command)
 
-                    batteryRecv = self.batterySubscriber.receive()
-                    if batteryRecv is not None: 
-                        if self.debugger:
-                            self.logger.info(batteryRecv)
-                        command = {"action": "battery", "activate": int(batteryRecv)}
-                        self.sendToSerial(command)
+                    #batteryRecv = self.batterySubscriber.receive()
+                    #if batteryRecv is not None: 
+                     #   if self.debugger:
+                      #      self.logger.info(batteryRecv)
+                      #  command = {"action": "battery", "activate": int(batteryRecv)}
+                       # self.sendToSerial(command)
 
-                    resourceMonitorRecv = self.resourceMonitorSubscriber.receive()
-                    if resourceMonitorRecv is not None: 
-                        if self.debugger:
-                            self.logger.info(resourceMonitorRecv)
-                        command = {"action": "resourceMonitor", "activate": int(resourceMonitorRecv)}
-                        self.sendToSerial(command)
+                    #resourceMonitorRecv = self.resourceMonitorSubscriber.receive()
+                    #if resourceMonitorRecv is not None: 
+                     #   if self.debugger:
+                      #      self.logger.info(resourceMonitorRecv)
+                       # command = {"action": "resourceMonitor", "activate": int(resourceMonitorRecv)}
+                        #self.sendToSerial(command)
 
                     imuRecv = self.imuSubscriber.receive()
                     if imuRecv is not None: 

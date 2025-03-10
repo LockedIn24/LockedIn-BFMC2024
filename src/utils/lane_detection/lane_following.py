@@ -2,134 +2,152 @@ import cv2
 import numpy as np
 import math
 
-def calculateServoAngleTan(middle_of_lane, image_center, roi_height, max_angle = 25):
-    deviation = middle_of_lane - image_center
-    angle_rad = math.atan(deviation/roi_height)
-    angle = math.degrees(angle_rad)
-    angle = max(-max_angle, min(max_angle, angle))
-    return angle
-
-def calculateServoAngleOnc(middle_of_lane, image_center, height, max_angle = 25):
-    error = middle_of_lane - image_center
-    distance = height // 2
-    wheelbaseLength = 360
-    steering_angle_rad = math.atan(2*wheelbaseLength*error/distance**2)
-    steering_angle = math.degrees(steering_angle_rad)
-    steering_angle = max(-max_angle, min(steering_angle, max_angle))
-    return steering_angle
-
 # Gamma correction function
 def adjust_gamma(image, gamma=1.0):
     invGamma = 1.0 / gamma
     table = np.array([((i / 255.0) ** invGamma) * 255 for i in range(256)]).astype("uint8")
     return cv2.LUT(image, table)
 
-# PID Regulator Class
-class PID:
-    def __init__(self, Kp, Ki, Kd):
-        self.Kp = Kp
-        self.Ki = Ki
-        self.Kd = Kd
-        self.prev_error = 0
-        self.integral = 0
-
-    def compute(self, error, dt):
-        self.integral += error * dt
-        derivative = (error - self.prev_error) / dt
-        output = self.Kp * error + self.Ki * self.integral + self.Kd * derivative
-        self.prev_error = error
-        
-        return output
-
 # Lane detection algorithm
 def lane_following(image):
     # Step 1: Preprocessing
-    blurred = cv2.GaussianBlur(image, (5, 5), 0)  # Apply low-pass filter
+    gamma_corrected = adjust_gamma(image, gamma=3)  # Adjust brightness
+    blurred = cv2.GaussianBlur(gamma_corrected, (5, 5), 0)  # Apply low-pass filter
 
     # Step 2: Convert to grayscale and apply Canny edge detection
     gray = cv2.cvtColor(blurred, cv2.COLOR_BGR2GRAY)
-    canny_image = cv2.Canny(gray, 100, 300)
+    edges = cv2.Canny(gray, 50, 150)
 
     # Step 3: Region of interest (ROI) to focus on the lane area
-    height, width = canny_image.shape
-    image_center = width // 2
-    start_height = int(0.45 * height) 
-    end_height = int(1 * height)
-    start_width = int(0.1 * width) #dodato za processed video 1
-    end_width = int(0.9 * width) #dodato za processed video 1
+    height, width = edges.shape
+    roi = np.zeros_like(edges)
+    roi_vertices = np.array([[(40 , 200), (90 , 50), (width - 90 , 50 ), (width - 40 , 200)]], dtype=np.int32)
+    cv2.fillPoly(roi, roi_vertices, 255)
+    masked_edges = cv2.bitwise_and(edges, roi)
+    
 
-    mask = np.zeros(canny_image.shape[:2], dtype=np.uint8)
-    pts = np.array([[start_width, start_height], [start_width, end_height], [end_width, start_height], [end_width, end_height]], np.int32)
-    pts = pts.reshape((-1, 1, 2))
-    cv2.fillPoly(mask, [pts], 255)
-    masked_image = cv2.bitwise_and(canny_image, canny_image, mask=mask)
 
     # Step 4: Detect lane lines using Hough Transform
-    #lines = cv2.HoughLinesP(masked_image, rho=1, theta=np.pi/180, threshold=30, minLineLength=40, maxLineGap=70)
-    lines = cv2.HoughLinesP(masked_image, 1, np.pi / 180, threshold=50, minLineLength=50, maxLineGap=10)
+    lines = cv2.HoughLinesP(masked_edges, rho=1, theta=np.pi/180, threshold=10, minLineLength=10, maxLineGap=50)
+    
+    #black_image = np.zeros((height, width, 3), dtype=np.uint8)
+    
 
     # Step 5: Compute the lane center
-    left_lane_x = []
-    right_lane_x = []
-    left_lane_y = []
-    right_lane_y = []
+    left_lines = []
+    right_lines = []
+    left_lane_slope = []
+    right_lane_slope = []
     if lines is not None:
         for line in lines:
-            x1, y1, x2, y2 = line[0]
-            slope = (y2 - y1) / (x2 - x1) if x2 != x1 else np.inf
-            if slope > -2 and slope < -0.5:
-                left_lane_x.extend([x1, x2])
-                left_lane_y.extend([y1, y2])
-                #cv2.line(masked_image, (x1, y1), (x2, y2), (0, 255, 0), 2)
-            elif slope > 0.5 and slope < 2:
-                right_lane_x.extend([x1, x2])
-                right_lane_y.extend([y1, y2])
-                #cv2.line(masked_image, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            for x1, y1, x2, y2 in line:
+                slope = (y2 - y1) / (x2 - x1) if x2 != x1 else np.inf
+                if 0.5 < slope < 3:  # Right lane
+                    if x2 < width / 2:
+                        continue
+                    right_lane_slope.append(slope)
+                    right_lines.append(line)
+                elif -3 < slope < -0.5:  # Left lane
+                    if x2 > width / 2:
+                        continue
+                    left_lane_slope.append(slope)
+                    left_lines.append(line)
+   
     
-    left_lane_center = np.mean(left_lane_x) if left_lane_x else 0
-    right_lane_center = np.mean(right_lane_x) if right_lane_x else width
+    average_right_slope = 0.0
+    average_left_slope = 0.0
     
-    left_lane_x = np.array(left_lane_x)
-    left_lane_y = np.array(left_lane_y)
-    right_lane_x = np.array(right_lane_x)
-    right_lane_y = np.array(right_lane_y)
-    
-    l_m, l_c = 0, 0
-    r_m, r_c = 0, 0 
-    if left_lane_x.size != 0:
-        left_coefficients = np.polyfit(left_lane_x, left_lane_y, deg=1)
-        l_m, l_c = left_coefficients  
-    if right_lane_x.size != 0:
-        right_coefficients = np.polyfit(right_lane_x, right_lane_y, deg=1)
-        r_m, r_c = right_coefficients
-    
-    if l_m != 0:    
-        x_min_left, x_max_left = min(left_lane_x), max(left_lane_x)  # Use detected x-points range
-        y_min_left = int(l_m * x_min_left + l_c)
-        y_max_left = int(l_m* x_max_left + l_c)
-        cv2.line(image, (x_min_left, y_min_left), (x_max_left, y_max_left), (0, 255, 0), 2)  # Green line
-    
-    if r_m != 0:
-        x_min_right, x_max_right = min(right_lane_x), max(right_lane_x)  # Use detected x-points range
-        y_min_right = int(r_m * x_min_right + r_c)
-        y_max_right = int(r_m* x_max_right + r_c)
-        cv2.line(image, (x_min_right, y_min_right), (x_max_right, y_max_right), (0, 255, 0), 2)  # Green line
+    if len(left_lane_slope) > 0:
+        average_left_slope = sum(left_lane_slope) / len(left_lane_slope)
+    if len(right_lane_slope) > 0: 
+        average_right_slope = sum(right_lane_slope) / len(right_lane_slope)
+        
+    left_delete_counter = 0
+    for i in range(0, len(left_lane_slope)):
+        if abs(left_lane_slope[i] - average_left_slope) > 0.5:
+            left_lines.pop(i - left_delete_counter)
+            left_delete_counter += 1
+            
+    right_delete_counter = 0
+    for i in range(0, len(right_lane_slope)):
+        if abs(right_lane_slope[i] - average_right_slope) > 0.5:
+            right_lines.pop(i - right_delete_counter)
+            right_delete_counter += 1
     
     
+    # for line in right_lines:
+    #     x1, y1, x2, y2 = line[0]
+    #     cv2.line(black_image, (x1,y1), (x2, y2), (255,255,255), 2)
     
-    middle_of_lane = (left_lane_center + right_lane_center) / 2
+    # for line in left_lines:
+    #     x1, y1, x2, y2 = line[0]
+    #     cv2.line(black_image, (x1,y1), (x2, y2), (255,255,255), 2)
+        
+        
+   
+    # Average left and right lanes
+    def average_slope_intercept(lines):
+        if len(lines) < 2:
+            return None
+        x_coords = []
+        y_coords = []
+        for line in lines:
+            for x1, y1, x2, y2 in line:
+                x_coords.extend([x1, x2])
+                y_coords.extend([y1, y2])
+        poly = np.polyfit(y_coords, x_coords, 1)  # Fit a line: x = my + c
+        return poly
 
-    # Step 6: Calculate angle
-    servo_angle1 = calculateServoAngleTan(middle_of_lane, image_center, height//2)
-    servo_angle2 = calculateServoAngleOnc(middle_of_lane, image_center, height)
-         
+    left_lane = average_slope_intercept(left_lines)
+    right_lane = average_slope_intercept(right_lines) 
+
+    # Compute lane center
+    lane_center_x = width // 2
+    if left_lane is not None:
+        cv2.line(image, (int(np.polyval(left_lane, height)), height), (int(np.polyval(left_lane, height // 2)), height // 2), (255, 0, 0), 5)
+    if right_lane is not None:
+        cv2.line(image, (int(np.polyval(right_lane, height)), height), (int(np.polyval(right_lane, height // 2)), height // 2), (0, 0, 255), 5)
+    
+    left_x, right_x = None, None
+    if left_lane is not None and right_lane is not None:
+        y_bottom = height // 2  # Bottom of the image
+        left_x = np.polyval(left_lane, y_bottom)
+        right_x = np.polyval(right_lane, y_bottom)
+        lane_center_x = int((left_x + right_x) / 2)
+        left_angle = np.degrees(np.arctan(average_left_slope))
+        right_angle = np.degrees(np.arctan(average_right_slope))
+        average_angle = (left_angle + right_angle) / 2
+    elif left_lane is not None:
+        cv2.putText(image, f"Steering Angle: 24.0", (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        return 23.0, image
+    elif right_lane is not None:
+        cv2.putText(image, f"Steering Angle: -20.0", (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        return -19.0, image
+    else:
+        cv2.putText(image, f"Steering Angle: 0.0", (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        return 0, image
+
+    # Step 6: Calculate error (distance from the center of the image to the lane center)
+    image_center_x = width // 2 - 5
+    error = lane_center_x - image_center_x    
+   
+    alpha = 0.5
+    beta = 0.2
+   
+    steering_angle = None
+    if abs(error) < 10:
+        steering_angle = 0.0
+    else:
+        steering_angle = alpha * np.degrees(np.arctan(error/(height / 2))) + beta * average_angle
+        steering_angle = max(-25, min(25, steering_angle))
+
     # Step 8: Visualization
     
-    
-    # Draw lane center
+    if left_x is not None and right_x is not None:
+        # Draw lane center
+        cv2.line(image, (int(left_x), height), (int(right_x), height), (0, 255, 255), 2)  # Yellow line for lane width
+        cv2.circle(image, (lane_center_x, height), 5, (0, 255, 0), -1)  # Green circle for lane center
+    cv2.line(image, (image_center_x, height), (lane_center_x, height), (0, 255, 0), 2)
+    cv2.putText(image, f"Steering Angle: {steering_angle:.2f}", (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
-    # cv2.circle(image, (middle_of_lane, height), 5, (0, 255, 0), -1)  # Green circle for lane center
-    # cv2.line(image, (width / 2, height), (middle_of_lane, height), (0, 255, 0), 2)
-    # cv2.putText(image, f"Steering Angle: {servo_angle1:.2f}", (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-
-    return servo_angle1, image
+    return steering_angle, image

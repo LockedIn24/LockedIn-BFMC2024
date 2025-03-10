@@ -45,14 +45,14 @@ class threadautomatic_control(ThreadWithStop):
         time.sleep(0.5)
         self.klSender.send("30")
         self.syncAutomaticSerial.set()
-        time.sleep(5)
+        time.sleep(0.5)
         self.speedSender.send("150")
         self.syncAutomaticSerial.set()
-        time.sleep(0.2)
+        time.sleep(0.3)
         while self._running:
             try:
                 # TODO: Speed receive
-                time.sleep(0.05)
+                time.sleep(0.01)
                 self.syncCameraAutomatic.wait()
                 angle = self.radiusSubscriber.receive()
                 if angle is not None:
@@ -73,7 +73,7 @@ class threadautomatic_control(ThreadWithStop):
 
         self.signs[self.currentSign] += 1
         # TODO: proveri broj frejmova koje mreza detektuje u sekundi, da bi odredio N
-        if self.signs[self.currentSign] == 3:
+        if self.signs[self.currentSign] == 1:
             if self.currentSign == 0:       # Crosswalk
                 self.crosswalkSign()
             elif self.currentSign == 1:     # Highway entrance    
@@ -126,6 +126,6 @@ class threadautomatic_control(ThreadWithStop):
     def crosswalkSign(self):
         self.speedSender.send("50")
         self.syncAutomaticSerial.set()
-        time.sleep(0.5)
+        time.sleep(2)
         self.speedSender.send("150")
         self.syncAutomaticSerial.set()

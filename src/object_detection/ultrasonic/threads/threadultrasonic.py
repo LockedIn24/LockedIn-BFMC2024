@@ -35,11 +35,15 @@ class threadultrasonic(ThreadWithStop):
     # Callback function to run when the pin state changes
     def signal_callback(self, value):
         if value == 1:
-            #self.ultrasonicSender.send(True)
-            self.syncAutomaticSerial.set()
+            for i in range(0,3):
+                self.ultrasonicSender.send(True)
+                time.sleep(0.1)
+                self.syncAutomaticSerial.set()
         else:
-            self.ultrasonicSender.send(False)
-            self.syncAutomaticSerial.set()
+            for i in range(0,3):
+                self.ultrasonicSender.send(False)
+                time.sleep(0.1)
+                self.syncAutomaticSerial.set()
 
     def run(self):
         try:
@@ -50,7 +54,7 @@ class threadultrasonic(ThreadWithStop):
 
                  # When an event occurs, read the current value
                 value = self.line.get_value()
-                
+               # print(f"Ultrasonic procitao: {value}")
                 
                 if value != last_value:
                     last_value = value

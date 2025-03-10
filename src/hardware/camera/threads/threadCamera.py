@@ -166,9 +166,10 @@ class threadCamera(ThreadWithStop):
                     #self.video_writer.write(mainRequest)
                 
                 serialRequest = cv2.cvtColor(serialRequest, cv2.COLOR_YUV2BGR_I420)
-                img = serialRequest.copy()
+                #img = serialRequest.copy()
+                cropped_image = serialRequest[0:205, 256:512]
                 if self.counter == 1:
-                    results = self.model(serialRequest, verbose = False)
+                    results = self.model(cropped_image, verbose = False)
                     max_size = -0.6
                     classId = -1                    
                     if results is not None and hasattr(results[0],"boxes"):
@@ -185,7 +186,7 @@ class threadCamera(ThreadWithStop):
                             #cv2.putText(img, objectId, (int(x_min), int(y_min) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
                       
                     self.counter = 0        
-                    if max_size > 2000:
+                    if max_size > 1500:
                         self.signSender.send(classId)
                         self.syncCameraAutomatic.set()
         
