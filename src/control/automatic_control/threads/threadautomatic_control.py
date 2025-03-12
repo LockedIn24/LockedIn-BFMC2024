@@ -46,7 +46,7 @@ class threadautomatic_control(ThreadWithStop):
         self.klSender.send("30")
         self.syncAutomaticSerial.set()
         time.sleep(0.5)
-        self.speedSender.send("100")
+        self.speedSender.send("200")
         self.syncAutomaticSerial.set()
         time.sleep(0.3)
         while self._running:

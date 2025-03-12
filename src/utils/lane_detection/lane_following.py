@@ -2,10 +2,40 @@ import cv2
 import numpy as np
 import math
 
+class PID:
+    def __init__(self, Kp, Ki, Kd):
+        self.Kp = Kp
+        self.Ki = Ki
+        self.Kd = Kd
+        self.prev_error = 0
+        self.integral = 0
+
+    def calculate(self, setpoint, current_value):
+        umax = 5
+        error = setpoint - current_value
+        self.integral += self.Ki * error
+        derivative = error - self.prev_error
+        self.prev_error = error
+        up = self.Kp * error
+        if self.integral > umax:
+            self.integral = umax
+        elif self.integral < -umax:
+            self.integral = -umax
+        ud = self.Kd * derivative
+        output = self.Kp * error + self.integral + self.Kd * derivative
+        return output, up, self.integral, ud
+    
+
+def adjust_gamma(image, gamma=1.0):
+    invGamma = 1.0 / gamma
+    table = np.array([((i / 255.0) ** invGamma) * 255 for i in range(256)]).astype("uint8")
+    return cv2.LUT(image, table)
+
 # Lane detection algorithm
 def lane_following(image):
     # Step 1: Preprocessing
-    blurred = cv2.GaussianBlur(image, (5, 5), 0)  # Apply low-pass filter
+    gamma_corrected = adjust_gamma(image, gamma = 0.5)
+    blurred = cv2.medianBlur(image, 5)  # Apply low-pass filter
 
     # Step 2: Convert to grayscale and apply Canny edge detection
     gray = cv2.cvtColor(blurred, cv2.COLOR_BGR2GRAY)
@@ -14,7 +44,7 @@ def lane_following(image):
     # Step 3: Region of interest (ROI) to focus on the lane area
     height, width = edges.shape
     roi = np.zeros_like(edges)
-    roi_vertices = np.array([[(80, 190), (400, 190), (310 , 50 ), (160, 50)]], dtype=np.int32)
+    roi_vertices = np.array([[(70, 190), (400, 190), (300 , 50 ), (140, 50)]], dtype=np.int32)
     cv2.fillPoly(roi, roi_vertices, 255)
     masked_edges = cv2.bitwise_and(edges, roi)
     
@@ -52,7 +82,7 @@ def lane_following(image):
         return -25.0, image, True
  
     # Step 4: Detect lane lines using Hough Transform
-    lines = cv2.HoughLinesP(masked_edges, rho=1, theta=np.pi/180, threshold=10, minLineLength=10, maxLineGap=100)
+    lines = cv2.HoughLinesP(masked_edges, rho=1, theta=np.pi/180, threshold=20, minLineLength=20, maxLineGap=80)
     
 
     # Step 5: Compute the lane center
@@ -64,10 +94,10 @@ def lane_following(image):
         for line in lines:
             for x1, y1, x2, y2 in line:
                 slope = (y2 - y1) / (x2 - x1) if x2 != x1 else np.inf
-                if 0.6 < slope:  # Right lane
+                if 0.6 < slope < 2.5:  # Right lane
                     right_lane_slope.append(slope)
                     right_lines.append(line)
-                elif slope < -0.6:  # Left lane
+                elif -2.5 < slope < -0.6:  # Left lane
                     left_lane_slope.append(slope)
                     left_lines.append(line)
    
@@ -120,6 +150,15 @@ def lane_following(image):
     left_x, right_x = None, None
     left_angle, right_angle, average_angle = None, None, None
     if left_lane is not None and right_lane is not None:
+        left_lane_slope = np.polyder(left_lane)
+        right_lane_slope = np.polyder(right_lane)
+        
+        if right_lane_slope + left_lane_slope > 0.2: 
+            if abs(left_lane_slope) > right_lane_slope:
+                return 22.0, image, False
+            else:
+                return -16.0, image, False
+
         y_bottom = height // 4 * 3  # Bottom of the image
         left_x = np.polyval(left_lane, y_bottom)
         right_x = np.polyval(right_lane, y_bottom)
@@ -132,7 +171,7 @@ def lane_following(image):
         return 22.0, image, False
     elif right_lane is not None:
         cv2.putText(image, f"Steering Angle: -18.0", (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-        return -18.0, image, False
+        return -19.0, image, False
     else:
         cv2.putText(image, f"Steering Angle: 0.0", (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
         return 0, image, False
@@ -141,11 +180,16 @@ def lane_following(image):
     image_center_x = width // 2 - 5
     error = lane_center_x - image_center_x
 
+    #pid = PID(0.1, 0.01, 0.1)
+    #steering_angle, up, ui, ud = pid.calculate(0, error)
+    #print(f'{steering_angle} {up :.2f} {ui :.2f} {ud :.2f}')
     alpha = 1.0
     beta = 0.2
     
     steering_angle = alpha * np.degrees(np.arctan(error/(height / 4 * 3))) + beta * average_angle
+    #steering_angle, up, ui, ud = pid.calculate(0, steering_angle)
     steering_angle = max(-25, min(25, steering_angle))
+    #print(f'{steering_angle} {up :.2f} {ui :.2f} {ud :.2f}')
 
     # Step 8: Visualization
     

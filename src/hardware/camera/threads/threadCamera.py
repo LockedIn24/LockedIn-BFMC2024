@@ -50,6 +50,7 @@ from src.utils.messages.messageHandlerSubscriber import messageHandlerSubscriber
 from src.templates.threadwithstop import ThreadWithStop
 
 from src.utils.lane_detection.lane_following import lane_following
+from src.utils.lane_detection.lane_following import PID
 
 class threadCamera(ThreadWithStop):
     """Thread which will handle camera functionalities.\n
@@ -72,7 +73,7 @@ class threadCamera(ThreadWithStop):
         self.counter = 0
         self.video_writer = ""
         self.model = YOLO("/home/oncst/Weights/weights/best.pt")
-        self.neuronWorks = True
+        self.neuronWorks = False
 
         self.laneWorks = True
  
@@ -87,7 +88,7 @@ class threadCamera(ThreadWithStop):
         self._init_camera()
         self.Queue_Sending()
         self.Configs()
-
+        self.pid = PID(1.0, 0.0, 0.1)
     def subscribe(self):
         """Subscribe function. In this function we make all the required subscribe to process gateway"""
 
@@ -196,9 +197,13 @@ class threadCamera(ThreadWithStop):
         
                     self.counter += 1   
                 angle, image, needsSteer = lane_following(serialRequest)
-#                self.radiusSender.send(float(angle * 10))
                 if needsSteer:
+                    self.radiusSender.send(float(angle * 10))
                     time.sleep(0.1)
+                else:
+                    #angle, up, ui, ud = self.pid.calculate(0, angle)
+                    #angle = max(-25, min(25, angle))
+                    self.radiusSender.send(float(angle * 10))
                 self.syncCameraAutomatic.set()
                 #cv2.imwrite("/home/oncst/slikePoslao/slika2.jpg", serialRequest)
               
