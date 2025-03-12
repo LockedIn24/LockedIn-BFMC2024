@@ -46,20 +46,20 @@ class threadautomatic_control(ThreadWithStop):
         self.klSender.send("30")
         self.syncAutomaticSerial.set()
         time.sleep(0.5)
-        self.speedSender.send("100")
+        self.speedSender.send("150")
         self.syncAutomaticSerial.set()
         time.sleep(0.3)
         while self._running:
             try:
                 # TODO: Speed receive
-                time.sleep(0.01)
-                self.syncCameraAutomatic.wait()
-                angle = self.radiusSubscriber.receive()
-                if angle is not None:
-                    self.steerSender.send(str(int(angle)))
-                    self.syncAutomaticSerial.set()
+                #time.sleep(0.01)
+                #self.syncCameraAutomatic.wait()
+                #angle = self.radiusSubscriber.receive()
+                #if angle is not None:
+                    #self.steerSender.send(str(int(angle)))
+                    #self.syncAutomaticSerial.set()
                 
-                time.sleep(0.01)
+                #time.sleep(0.01)
                 self.syncCameraAutomatic.wait()
                 self.currentSign = self.signSubscriber.receive()
 
@@ -133,25 +133,23 @@ class threadautomatic_control(ThreadWithStop):
         self.syncAutomaticSerial.set()
 
     def parkingSign(self):
-        self.isParking = True
         self.speedSender.send("100")
         self.syncAutomaticSerial.set()
         time.sleep(2)
         self.speedSender.send("-50")
         self.syncAutomaticSerial.set()
-        self.steerSender.send("-250")
+        self.steerSender.send("24")
         self.syncAutomaticSerial.set()
         time.sleep(3)
-        self.steerSender.send("250")
+        self.steerSender.send("-24")
         self.syncAutomaticSerial.set()
         time.sleep(2)
         self.speedSender.send("50")
         self.syncAutomaticSerial.set()
-        self.steerSender.send("-250")
-        self.syncAutomaticSerial.set()
+        self.steerSender.send("24")
+        
         time.sleep(1)
         self.steerSender.send("0")
-        self.syncAutomaticSerial.set()
         self.speedSender.send("0")
         self.syncAutomaticSerial.set()
-        self.isParking = False
+

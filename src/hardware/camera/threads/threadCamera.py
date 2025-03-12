@@ -72,6 +72,9 @@ class threadCamera(ThreadWithStop):
         self.counter = 0
         self.video_writer = ""
         self.model = YOLO("/home/oncst/Weights/weights/best.pt")
+        self.neuronWorks = True
+
+        self.laneWorks = True
  
         self.recordingSender = messageHandlerSender(self.queuesList, Recording)
         self.mainCameraSender = messageHandlerSender(self.queuesList, mainCamera)
@@ -166,38 +169,41 @@ class threadCamera(ThreadWithStop):
                     #self.video_writer.write(mainRequest)
                 
                 serialRequest = cv2.cvtColor(serialRequest, cv2.COLOR_YUV2BGR_I420)
-                #img = serialRequest.copy()
-                cropped_image = serialRequest[0:205, 256:512]
-                if self.counter == 1:
-                    results = self.model(cropped_image, verbose = False)
-                    max_size = -0.6
-                    classId = -1                    
-                    if results is not None and hasattr(results[0],"boxes"):
-                        for box in results[0].boxes:  # Each detection
-                            x_min, y_min, x_max, y_max = box.xyxy.tolist()[0]
-                            bbox_width = x_max - x_min
-                            bbox_height = y_max - y_min
-                            objectId = int(box.cls.item())
-                            surface_area = bbox_width * bbox_height
-                            if surface_area > max_size:
-                                classId = objectId
-                                max_size = surface_area
+                
+                if self.neuronWorks:
+                    cropped_image = serialRequest[0:205, 256:512]
+                    if self.counter == 1:
+                        results = self.model(cropped_image, verbose = False)
+                        max_size = -0.6
+                        classId = -1                    
+                        if results is not None and hasattr(results[0],"boxes"):
+                            for box in results[0].boxes:  # Each detection
+                                x_min, y_min, x_max, y_max = box.xyxy.tolist()[0]
+                                bbox_width = x_max - x_min
+                                bbox_height = y_max - y_min
+                                objectId = int(box.cls.item())
+                                surface_area = bbox_width * bbox_height
+                                if surface_area > max_size:
+                                    classId = objectId
+                                    max_size = surface_area
                             #cv2.rectangle(img, (int(x_min), int(y_min)), (int(x_max), int(y_max)), (0, 255, 0), 2)  # Green box
                             #cv2.putText(img, objectId, (int(x_min), int(y_min) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
                       
-                    self.counter = 0        
-                    if max_size > 1500:
-                        self.signSender.send(classId)
-                        self.syncCameraAutomatic.set()
+                        self.counter = 0        
+                        if max_size > 1500:
+                            self.signSender.send(classId)
+                            self.syncCameraAutomatic.set()
         
-                self.counter += 1   
-                angle, image = lane_following(serialRequest)
-                self.radiusSender.send(float(angle * 10))
+                    self.counter += 1   
+                angle, image, needsSteer = lane_following(serialRequest)
+#                self.radiusSender.send(float(angle * 10))
+                if needsSteer:
+                    time.sleep(0.1)
                 self.syncCameraAutomatic.set()
                 #cv2.imwrite("/home/oncst/slikePoslao/slika2.jpg", serialRequest)
               
                 # _, mainEncodedImg = cv2.imencode(".jpg", mainRequest)
-                _, serialEncodedImg = cv2.imencode(".jpg", image)
+                _, serialEncodedImg = cv2.imencode(".jpg", serialRequest)
                 serialEncodedImageData = base64.b64encode(serialEncodedImg).decode("utf-8")
                 
                 # self.mainCameraSender.send(mainEncodedImageData)

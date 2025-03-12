@@ -2,35 +2,57 @@ import cv2
 import numpy as np
 import math
 
-# Gamma correction function
-def adjust_gamma(image, gamma=1.0):
-    invGamma = 1.0 / gamma
-    table = np.array([((i / 255.0) ** invGamma) * 255 for i in range(256)]).astype("uint8")
-    return cv2.LUT(image, table)
-
 # Lane detection algorithm
 def lane_following(image):
     # Step 1: Preprocessing
-    gamma_corrected = adjust_gamma(image, gamma=3)  # Adjust brightness
-    blurred = cv2.GaussianBlur(gamma_corrected, (5, 5), 0)  # Apply low-pass filter
+    blurred = cv2.GaussianBlur(image, (5, 5), 0)  # Apply low-pass filter
 
     # Step 2: Convert to grayscale and apply Canny edge detection
     gray = cv2.cvtColor(blurred, cv2.COLOR_BGR2GRAY)
-    edges = cv2.Canny(gray, 50, 150)
+    edges = cv2.Canny(gray, 100, 300)
 
     # Step 3: Region of interest (ROI) to focus on the lane area
     height, width = edges.shape
     roi = np.zeros_like(edges)
-    roi_vertices = np.array([[(40 , 200), (90 , 50), (width - 90 , 50 ), (width - 40 , 200)]], dtype=np.int32)
+    roi_vertices = np.array([[(80, 190), (400, 190), (310 , 50 ), (160, 50)]], dtype=np.int32)
     cv2.fillPoly(roi, roi_vertices, 255)
     masked_edges = cv2.bitwise_and(edges, roi)
     
-
-
-    # Step 4: Detect lane lines using Hough Transform
-    lines = cv2.HoughLinesP(masked_edges, rho=1, theta=np.pi/180, threshold=10, minLineLength=10, maxLineGap=50)
+    #Defining left and right roi
+    roi_left = edges[220:250, 140:160]    
+    roi_right = edges[ 220:250, 340:360]
     
-    #black_image = np.zeros((height, width, 3), dtype=np.uint8)
+    
+    cv2.rectangle(image, (140, 220), (160, 250 ), (255,0,0), 2)
+    cv2.rectangle(image, (340, 220), (360, 250), (255,0,0), 2)
+    
+    
+    _, binary_left = cv2.threshold(roi_left, 230, 255, cv2.THRESH_BINARY)
+    _, binary_right = cv2.threshold(roi_right, 230, 255, cv2.THRESH_BINARY)
+    
+    left_pixel_count = np.sum(binary_left == 255)
+    right_pixel_count = np.sum(binary_right == 255)
+    
+    #cv2.putText(image, f"Left pixel count is: {left_pixel_count}", (30, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+    #cv2.putText(image, f"Right pixel count is: {right_pixel_count}", (30, 200), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+
+    if right_pixel_count == 0:
+        right_pixel_count = 1
+    if left_pixel_count == 0:
+        left_pixel_count = 1
+        
+    division_left = left_pixel_count / right_pixel_count
+    division_right = right_pixel_count / left_pixel_count
+    
+    if division_left > 2 and left_pixel_count > 40:
+        cv2.putText(image, "Mora da se skrene desnoooo", (30, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        return 25.0, image, True
+    elif division_right > 2 and right_pixel_count > 40:
+        cv2.putText(image, "Mora da se skrene levo", (30, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        return -25.0, image, True
+ 
+    # Step 4: Detect lane lines using Hough Transform
+    lines = cv2.HoughLinesP(masked_edges, rho=1, theta=np.pi/180, threshold=10, minLineLength=10, maxLineGap=100)
     
 
     # Step 5: Compute the lane center
@@ -42,14 +64,10 @@ def lane_following(image):
         for line in lines:
             for x1, y1, x2, y2 in line:
                 slope = (y2 - y1) / (x2 - x1) if x2 != x1 else np.inf
-                if 0.5 < slope < 3:  # Right lane
-                    if x2 < width / 2:
-                        continue
+                if 0.6 < slope:  # Right lane
                     right_lane_slope.append(slope)
                     right_lines.append(line)
-                elif -3 < slope < -0.5:  # Left lane
-                    if x2 > width / 2:
-                        continue
+                elif slope < -0.6:  # Left lane
                     left_lane_slope.append(slope)
                     left_lines.append(line)
    
@@ -73,21 +91,11 @@ def lane_following(image):
         if abs(right_lane_slope[i] - average_right_slope) > 0.5:
             right_lines.pop(i - right_delete_counter)
             right_delete_counter += 1
-    
-    
-    # for line in right_lines:
-    #     x1, y1, x2, y2 = line[0]
-    #     cv2.line(black_image, (x1,y1), (x2, y2), (255,255,255), 2)
-    
-    # for line in left_lines:
-    #     x1, y1, x2, y2 = line[0]
-    #     cv2.line(black_image, (x1,y1), (x2, y2), (255,255,255), 2)
-        
         
    
     # Average left and right lanes
     def average_slope_intercept(lines):
-        if len(lines) < 2:
+        if len(lines) == 0:
             return None
         x_coords = []
         y_coords = []
@@ -108,9 +116,11 @@ def lane_following(image):
     if right_lane is not None:
         cv2.line(image, (int(np.polyval(right_lane, height)), height), (int(np.polyval(right_lane, height // 2)), height // 2), (0, 0, 255), 5)
     
+    
     left_x, right_x = None, None
+    left_angle, right_angle, average_angle = None, None, None
     if left_lane is not None and right_lane is not None:
-        y_bottom = height // 2  # Bottom of the image
+        y_bottom = height // 4 * 3  # Bottom of the image
         left_x = np.polyval(left_lane, y_bottom)
         right_x = np.polyval(right_lane, y_bottom)
         lane_center_x = int((left_x + right_x) / 2)
@@ -118,28 +128,24 @@ def lane_following(image):
         right_angle = np.degrees(np.arctan(average_right_slope))
         average_angle = (left_angle + right_angle) / 2
     elif left_lane is not None:
-        cv2.putText(image, f"Steering Angle: 24.0", (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-        return 23.0, image
+        cv2.putText(image, f"Steering Angle: 22.0", (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        return 22.0, image, False
     elif right_lane is not None:
-        cv2.putText(image, f"Steering Angle: -20.0", (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-        return -19.0, image
+        cv2.putText(image, f"Steering Angle: -18.0", (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        return -18.0, image, False
     else:
         cv2.putText(image, f"Steering Angle: 0.0", (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-        return 0, image
+        return 0, image, False
 
     # Step 6: Calculate error (distance from the center of the image to the lane center)
     image_center_x = width // 2 - 5
-    error = lane_center_x - image_center_x    
-   
-    alpha = 0.5
+    error = lane_center_x - image_center_x
+
+    alpha = 1.0
     beta = 0.2
-   
-    steering_angle = None
-    if abs(error) < 10:
-        steering_angle = 0.0
-    else:
-        steering_angle = alpha * np.degrees(np.arctan(error/(height / 2))) + beta * average_angle
-        steering_angle = max(-25, min(25, steering_angle))
+    
+    steering_angle = alpha * np.degrees(np.arctan(error/(height / 4 * 3))) + beta * average_angle
+    steering_angle = max(-25, min(25, steering_angle))
 
     # Step 8: Visualization
     
@@ -150,4 +156,4 @@ def lane_following(image):
     cv2.line(image, (image_center_x, height), (lane_center_x, height), (0, 255, 0), 2)
     cv2.putText(image, f"Steering Angle: {steering_angle:.2f}", (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
-    return steering_angle, image
+    return steering_angle, image, False
