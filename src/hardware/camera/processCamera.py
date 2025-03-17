@@ -32,8 +32,10 @@ if __name__ == "__main__":
 
 from src.templates.workerprocess import WorkerProcess
 from src.hardware.camera.threads.threadCamera import threadCamera
+from src.hardware.camera.threads.threadNeuron import threadNeuron
 
-from multiprocessing import Pipe
+
+from multiprocessing import Pipe, Queue
 
 
 class processCamera(WorkerProcess):
@@ -51,6 +53,8 @@ class processCamera(WorkerProcess):
         self.debugging = debugging
         self.syncCameraAutomatic = syncCameraAutomatic
         super(processCamera, self).__init__(self.queuesList)
+        self.queueImage = Queue()
+        self.queueSign = Queue()
 
     # ===================================== RUN ==========================================
     def run(self):
@@ -60,8 +64,10 @@ class processCamera(WorkerProcess):
     # ===================================== INIT TH ======================================
     def _init_threads(self):
         """Create the Camera Publisher thread and add to the list of threads."""
-        camTh = threadCamera(self.queuesList, self.logging, self.syncCameraAutomatic, self.debugging )
+        camTh = threadCamera(self.queuesList, self.queueImage, self.queueSign, self.logging, self.syncCameraAutomatic, self.debugging )
         self.threads.append(camTh)
+        neuronTh = threadNeuron(self.queueImage, self.queueSign)
+        self.threads.append(neuronTh)
 
 
 # =================================== EXAMPLE =========================================
