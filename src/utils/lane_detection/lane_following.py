@@ -2,39 +2,39 @@ import cv2
 import numpy as np
 import math
 
-class PID:
-    def __init__(self, Kp, Ki, Kd):
-        self.Kp = Kp
-        self.Ki = Ki
-        self.Kd = Kd
-        self.prev_error = 0
-        self.integral = 0
+#class PID:
+ #   def __init__(self, Kp, Ki, Kd):
+  #      self.Kp = Kp
+   #     self.Ki = Ki
+    #    self.Kd = Kd
+     #   self.prev_error = 0
+      #  self.integral = 0
 
-    def calculate(self, setpoint, current_value):
-        umax = 5
-        error = setpoint - current_value
-        self.integral += self.Ki * error
-        derivative = error - self.prev_error
-        self.prev_error = error
-        up = self.Kp * error
-        if self.integral > umax:
-            self.integral = umax
-        elif self.integral < -umax:
-            self.integral = -umax
-        ud = self.Kd * derivative
-        output = self.Kp * error + self.integral + self.Kd * derivative
-        return output, up, self.integral, ud
+#    def calculate(self, setpoint, current_value):
+ #       umax = 5
+  #      error = setpoint - current_value
+   #     self.integral += self.Ki * error
+    #    derivative = error - self.prev_error
+     #   self.prev_error = error
+      #  up = self.Kp * error
+       # if self.integral > umax:
+        #    self.integral = umax
+#        elif self.integral < -umax:
+ #           self.integral = -umax
+  #      ud = self.Kd * derivative
+   #     output = self.Kp * error + self.integral + self.Kd * derivative
+    #    return output, up, self.integral, ud
     
 
-def adjust_gamma(image, gamma=1.0):
-    invGamma = 1.0 / gamma
-    table = np.array([((i / 255.0) ** invGamma) * 255 for i in range(256)]).astype("uint8")
-    return cv2.LUT(image, table)
+#def adjust_gamma(image, gamma=1.0):
+ #   invGamma = 1.0 / gamma
+  #  table = np.array([((i / 255.0) ** invGamma) * 255 for i in range(256)]).astype("uint8")
+   # return cv2.LUT(image, table)
 
 # Lane detection algorithm
 def lane_following(image):
     # Step 1: Preprocessing
-    gamma_corrected = adjust_gamma(image, gamma = 0.5)
+    #gamma_corrected = adjust_gamma(image, gamma = 0.5)
     blurred = cv2.medianBlur(image, 5)  # Apply low-pass filter
 
     # Step 2: Convert to grayscale and apply Canny edge detection
@@ -76,10 +76,10 @@ def lane_following(image):
     
     if division_left > 2 and left_pixel_count > 40:
         cv2.putText(image, "Mora da se skrene desnoooo", (30, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-        return 25.0, image, True
+        return 25.0, True, False
     elif division_right > 2 and right_pixel_count > 40:
         cv2.putText(image, "Mora da se skrene levo", (30, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-        return -25.0, image, True
+        return -25.0, True, False
  
     # Step 4: Detect lane lines using Hough Transform
     lines = cv2.HoughLinesP(masked_edges, rho=1, theta=np.pi/180, threshold=20, minLineLength=20, maxLineGap=80)
@@ -155,9 +155,9 @@ def lane_following(image):
         
         if right_lane_slope + left_lane_slope > 0.2: 
             if abs(left_lane_slope) > right_lane_slope:
-                return 22.0, image, False
+                return 23.0, False, True
             else:
-                return -16.0, image, False
+                return -19.0, False, True
 
         y_bottom = height // 4 * 3  # Bottom of the image
         left_x = np.polyval(left_lane, y_bottom)
@@ -167,14 +167,14 @@ def lane_following(image):
         right_angle = np.degrees(np.arctan(average_right_slope))
         average_angle = (left_angle + right_angle) / 2
     elif left_lane is not None:
-        cv2.putText(image, f"Steering Angle: 22.0", (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-        return 22.0, image, False
+        cv2.putText(image, f"Steering Angle: 25.0", (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        return 25.0, False, True
     elif right_lane is not None:
-        cv2.putText(image, f"Steering Angle: -18.0", (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-        return -19.0, image, False
+        cv2.putText(image, f"Steering Angle: -20.0", (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        return -19.0, False, True
     else:
         cv2.putText(image, f"Steering Angle: 0.0", (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-        return 0, image, False
+        return 0, False, False
 
     # Step 6: Calculate error (distance from the center of the image to the lane center)
     image_center_x = width // 2 - 5
@@ -200,4 +200,4 @@ def lane_following(image):
     cv2.line(image, (image_center_x, height), (lane_center_x, height), (0, 255, 0), 2)
     cv2.putText(image, f"Steering Angle: {steering_angle:.2f}", (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
-    return steering_angle, image, False
+    return steering_angle, False, False

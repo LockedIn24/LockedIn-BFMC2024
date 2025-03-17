@@ -33,6 +33,7 @@ class threadautomatic_control(ThreadWithStop):
         self.currentSign = -1
         self.signs = defaultdict(int)
         self.stopedBefore = False
+        self.isParking = False
 
         self.speedSender = messageHandlerSender(self.queuesList, SpeedMotor)
         self.steerSender = messageHandlerSender(self.queuesList, SteerMotor)
@@ -46,7 +47,7 @@ class threadautomatic_control(ThreadWithStop):
         self.klSender.send("30")
         self.syncAutomaticSerial.set()
         time.sleep(0.5)
-        self.speedSender.send("200")
+        self.speedSender.send("100")
         self.syncAutomaticSerial.set()
         time.sleep(0.3)
         while self._running:
@@ -126,32 +127,44 @@ class threadautomatic_control(ThreadWithStop):
         self.syncAutomaticSerial.set()
     
     def crosswalkSign(self):
+        print("Crosswalk MODE ON")
+        if self.isParking == True:
+                self.isParking = False
+        time.sleep(01.2)
         self.speedSender.send("50")
         self.syncAutomaticSerial.set()
-        time.sleep(1)
-        self.speedSender.send("150")
+        time.sleep(3.7)
+        self.speedSender.send("100")
         self.syncAutomaticSerial.set()
+        print("Crosswalk MODE OFF")
 
     def parkingSign(self):
         self.isParking = True
+        print("PARKING MODE ON")
         self.speedSender.send("100")
         self.syncAutomaticSerial.set()
-        time.sleep(2)
-        self.speedSender.send("-50")
+        time.sleep(11.7)
+        self.speedSender.send("-100")
         self.syncAutomaticSerial.set()
+        time.sleep(0.2)
         self.steerSender.send("-250")
         self.syncAutomaticSerial.set()
-        time.sleep(3)
+        time.sleep(3.8)
         self.steerSender.send("250")
         self.syncAutomaticSerial.set()
-        time.sleep(2)
-        self.speedSender.send("50")
+        time.sleep(3.5)
+        self.speedSender.send("100")
         self.syncAutomaticSerial.set()
+        time.sleep(0.2)
         self.steerSender.send("-250")
         self.syncAutomaticSerial.set()
-        time.sleep(1)
-        self.steerSender.send("0")
+        time.sleep(0.4)
         self.syncAutomaticSerial.set()
         self.speedSender.send("0")
+        time.sleep(0.1)
         self.syncAutomaticSerial.set()
+        self.steerSender.send("0")
         self.isParking = False
+        self.syncAutomaticSerial.set()
+        print("PARKING MODE OFF")
+        

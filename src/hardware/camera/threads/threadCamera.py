@@ -31,8 +31,8 @@ import threading
 import base64
 import picamera2
 import time
-
-
+import numpy as np
+ 
 from ultralytics import YOLO
 from src.utils.messages.allMessages import (
     RadiusLane,
@@ -50,7 +50,7 @@ from src.utils.messages.messageHandlerSubscriber import messageHandlerSubscriber
 from src.templates.threadwithstop import ThreadWithStop
 
 from src.utils.lane_detection.lane_following import lane_following
-from src.utils.lane_detection.lane_following import PID
+#from src.utils.lane_detection.lane_following import PID
 
 class threadCamera(ThreadWithStop):
     """Thread which will handle camera functionalities.\n
@@ -73,7 +73,7 @@ class threadCamera(ThreadWithStop):
         self.counter = 0
         self.video_writer = ""
         self.model = YOLO("/home/oncst/Weights/weights/best.pt")
-        self.neuronWorks = False
+        self.neuronWorks = True
 
         self.laneWorks = True
  
@@ -88,7 +88,7 @@ class threadCamera(ThreadWithStop):
         self._init_camera()
         self.Queue_Sending()
         self.Configs()
-        self.pid = PID(1.0, 0.0, 0.1)
+#        self.pid = PID(1.0, 0.0, 0.1)
     def subscribe(self):
         """Subscribe function. In this function we make all the required subscribe to process gateway"""
 
@@ -163,7 +163,7 @@ class threadCamera(ThreadWithStop):
                 print(e)
 
             if send:
-                mainRequest = self.camera.capture_array("main")
+               # mainRequest = self.camera.capture_array("main")
                 serialRequest = self.camera.capture_array("lores")  # Will capture an array that can be used by OpenCV library
 
                 #if self.recording == True:
@@ -195,16 +195,33 @@ class threadCamera(ThreadWithStop):
                             self.signSender.send(classId)
                             self.syncCameraAutomatic.set()
         
-                    self.counter += 1   
-                angle, image, needsSteer = lane_following(serialRequest)
-                if needsSteer:
+             #       self.counter += 1
+              #      angle, image = lane_following(serialRequest)
+               #     self.radiusSender.send(float(angle * 10))
+                #    self.syncCameraAutomatic.set()
+                self.counter += 1   
+                angle, needsSteer, hardcore = lane_following(serialRequest)
+                if hardcore:
+                    print("HC")
+                    self.radiusSender.send(float(angle * 10))
+                    self.syncCameraAutomatic.set()
+                    time.sleep(0.3)
+                    self.radiusSender.send(float(angle * 10 + 30))
+                    time.sleep(0.2)
+                    self.syncCameraAutomatic.set()
+                    self.radiusSender.send(float(angle * 10))
+                    self.syncCameraAutomatic.set()
+                    needsSteer = False
+                elif needsSteer:
                     self.radiusSender.send(float(angle * 10))
                     time.sleep(0.1)
+                    self.syncCameraAutomatic.set()
                 else:
-                    #angle, up, ui, ud = self.pid.calculate(0, angle)
-                    #angle = max(-25, min(25, angle))
+                   # angle, up, ui, ud = self.pid.calculate(0, angle)
+                    angle =  max(-25, min(25, angle))
                     self.radiusSender.send(float(angle * 10))
-                self.syncCameraAutomatic.set()
+                    self.syncCameraAutomatic.set()
+                #self.syncCameraAutomatic.set()
                 #cv2.imwrite("/home/oncst/slikePoslao/slika2.jpg", serialRequest)
               
                 # _, mainEncodedImg = cv2.imencode(".jpg", mainRequest)
