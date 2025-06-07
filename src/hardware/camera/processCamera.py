@@ -83,7 +83,7 @@ if __name__ == "__main__":
 
     allProcesses = list()
 
-    debugg = True
+    debug = True
 
     queueList = {
         "Critical": Queue(),
@@ -94,13 +94,13 @@ if __name__ == "__main__":
 
     logger = logging.getLogger()
 
-    process = processCamera(queueList, logger, debugg)
+    process = processCamera(queueList, logger, debug)
 
     process.daemon = True
     process.start()
 
     time.sleep(4)
-    if debugg:
+    if debug:
         logger.warning("getting")
     img = {"msgValue": 1}
     while type(img["msgValue"]) != type(":text"):
@@ -108,7 +108,7 @@ if __name__ == "__main__":
     image_data = base64.b64decode(img["msgValue"])
     img = np.frombuffer(image_data, dtype=np.uint8)
     image = cv2.imdecode(img, cv2.IMREAD_COLOR)
-    if debugg:
+    if debug:
         logger.warning("got")
     cv2.imwrite("test.jpg", image)
     process.stop()

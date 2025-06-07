@@ -35,42 +35,33 @@ class threadultrasonic(ThreadWithStop):
     # Callback function to run when the pin state changes
     def signal_callback(self, value):
         if value == 1:
-            for i in range(0,3):
+            for i in range(0, 3):
                 self.ultrasonicSender.send(True)
                 time.sleep(0.1)
                 self.syncAutomaticSerial.set()
         else:
-            for i in range(0,3):
+            for i in range(0, 3):
                 self.ultrasonicSender.send(False)
                 time.sleep(0.1)
                 self.syncAutomaticSerial.set()
 
     def run(self):
-        try:
-            last_value = self.line.get_value()  # Initialize last value
-            while self._running:
-                # Wait for an event on the line (either rising or falling edge)
-                self.line.event_wait()
+        last_value = self.line.get_value()  # Initialize last value
+        while self._running:
+            # Wait for an event on the line (either rising or falling edge)
+            self.line.event_wait()
 
-                 # When an event occurs, read the current value
-                value = self.line.get_value()
-               # print(f"Ultrasonic procitao: {value}")
-                
-                if value != last_value:
-                    last_value = value
-                    # Detect if it's a rising or falling edge
-                    if value == 1:
-                        self.signal_callback(1)  # Rising edge
-                    else:
-                        self.signal_callback(0)  # Falling edge
+            # When an event occurs, read the current value
+            value = self.line.get_value()
             
-                time.sleep(0.1)  # Sleep to reduce CPU usage
-
-        except KeyboardInterrupt:
-            print("\nExiting...")
-
-            # Cleanup: Release the GPIO line
-            self.line.release()
+            if value != last_value:
+                last_value = value
+                if value == 1:
+                    self.signal_callback(1)  # Rising edge
+                else:
+                    self.signal_callback(0)  # Falling edge
+        
+            time.sleep(0.1)  # Sleep to reduce CPU usage
 
     def subscribe(self):
         """Subscribes to the messages you are interested in"""

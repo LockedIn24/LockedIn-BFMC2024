@@ -51,7 +51,6 @@ from src.templates.threadwithstop import ThreadWithStop
 
 
 from src.utils.lane_detection.lane_following import lane_following
-#from src.utils.lane_detection.lane_following import PID
 
 class threadCamera(ThreadWithStop):
     """Thread which will handle camera functionalities.\n
@@ -166,11 +165,7 @@ class threadCamera(ThreadWithStop):
                 print(e)
 
             if send:
-               # mainRequest = self.camera.capture_array("main")
                 serialRequest = self.camera.capture_array("lores")  # Will capture an array that can be used by OpenCV library
-
-                #if self.recording == True:
-                    #self.video_writer.write(mainRequest)
                 
                 serialRequest = cv2.cvtColor(serialRequest, cv2.COLOR_YUV2BGR_I420)
                 
@@ -182,33 +177,19 @@ class threadCamera(ThreadWithStop):
                     if sign is not None:
                         self.signSender(sign)
                     
-                angle, needsSteer, hardcore = lane_following(serialRequest)
-                # if hardcore:
-                #     print("HC")
-                #     self.radiusSender.send(float(angle * 10))
-                #     self.syncCameraAutomatic.set()
-                #     time.sleep(0.3)
-                #     self.radiusSender.send(float(angle * 10 + 30))
-                #     time.sleep(0.2)
-                #     self.syncCameraAutomatic.set()
-                #     self.radiusSender.send(float(angle * 10))
-                #     self.syncCameraAutomatic.set()
-                #     needsSteer = False
+                angle, needsSteer = lane_following(serialRequest)
                 if needsSteer:
                     self.radiusSender.send(float(angle * 10))
                     time.sleep(0.1)
                     self.syncCameraAutomatic.set()
                 else:
-                   # angle, up, ui, ud = self.pid.calculate(0, angle)
                     angle =  max(-25, min(25, angle))
                     self.radiusSender.send(float(angle * 10))
                     self.syncCameraAutomatic.set()
               
-                # _, mainEncodedImg = cv2.imencode(".jpg", mainRequest)
                 _, serialEncodedImg = cv2.imencode(".jpg", serialRequest)
                 serialEncodedImageData = base64.b64encode(serialEncodedImg).decode("utf-8")
                 
-                # self.mainCameraSender.send(mainEncodedImageData)
                 self.serialCameraSender.send(serialEncodedImageData)
 
             send = not send

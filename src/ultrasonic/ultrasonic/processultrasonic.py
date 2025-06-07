@@ -3,7 +3,7 @@ if __name__ == "__main__":
     sys.path.insert(0, "../../..")
 
 from src.templates.workerprocess import WorkerProcess
-from src.object_detection.ultrasonic.threads.threadultrasonic import threadultrasonic
+from src.ultrasonic.ultrasonic.threads.threadultrasonic import threadultrasonic
 
 class ProcessUltrasonic(WorkerProcess):
     """This process handles ultrasonic.

@@ -73,7 +73,6 @@ class threadautomatic_control(ThreadWithStop):
     def signReaction(self):
 
         self.signs[self.currentSign] += 1
-        # TODO: proveri broj frejmova koje mreza detektuje u sekundi, da bi odredio N
         if self.signs[self.currentSign] == 1:
             if self.currentSign == 0:       # Crosswalk
                 self.crosswalkSign()
@@ -127,20 +126,17 @@ class threadautomatic_control(ThreadWithStop):
         self.syncAutomaticSerial.set()
     
     def crosswalkSign(self):
-        print("Crosswalk MODE ON")
         if self.isParking == True:
                 self.isParking = False
-        time.sleep(01.2)
+        time.sleep(1.2)
         self.speedSender.send("50")
         self.syncAutomaticSerial.set()
         time.sleep(3.7)
         self.speedSender.send("100")
         self.syncAutomaticSerial.set()
-        print("Crosswalk MODE OFF")
 
     def parkingSign(self):
         self.isParking = True
-        print("PARKING MODE ON")
         self.speedSender.send("100")
         self.syncAutomaticSerial.set()
         time.sleep(11.7)
@@ -166,5 +162,3 @@ class threadautomatic_control(ThreadWithStop):
         self.steerSender.send("0")
         self.isParking = False
         self.syncAutomaticSerial.set()
-        print("PARKING MODE OFF")
-        

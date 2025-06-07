@@ -58,7 +58,7 @@ from src.hardware.serialhandler.processSerialHandler import processSerialHandler
 from src.data.Semaphores.Semaphores import processSemaphores
 from src.data.TrafficCommunication.processTrafficCommunication import processTrafficCommunication
 from src.utils.ipManager.IpReplacement import IPManager
-from src.object_detection.ultrasonic.processultrasonic import ProcessUltrasonic
+from src.ultrasonic.ultrasonic.processultrasonic import ProcessUltrasonic
 # ------ New component imports starts here ------#
 
 # ------ New component imports ends here ------#
