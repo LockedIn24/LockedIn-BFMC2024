@@ -90,7 +90,6 @@ class threadCamera(ThreadWithStop):
         self._init_camera()
         self.Queue_Sending()
         self.Configs()
-#        self.pid = PID(1.0, 0.0, 0.1)
     def subscribe(self):
         """Subscribe function. In this function we make all the required subscribe to process gateway"""
 
